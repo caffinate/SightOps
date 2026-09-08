@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI usage</title>
+  <style>
+    :root { color-scheme: light dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--foreground, inherit);
+      font: inherit;
+    }
+    .wrap { max-width: 42rem; }
+    header {
+      display: flex;
+      align-items: baseline;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+    h1 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin: 0;
+    }
+    .meta {
+      color: var(--muted-foreground, #888);
+      font-size: 0.75rem;
+    }
+    button {
+      margin-left: auto;
+      border: 1px solid var(--border, #444);
+      background: transparent;
+      color: inherit;
+      font: inherit;
+      font-size: 0.75rem;
+      padding: 0.2rem 0.55rem;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .card {
+      border: 1px solid var(--border, #333);
+      border-radius: 10px;
+      padding: 0.7rem 0.8rem 0.8rem;
+      margin: 0 0 0.55rem;
+    }
+    .row {
+      display: flex;
+      align-items: baseline;
+      gap: 0.5rem;
+    }
+    .name { font-weight: 600; font-size: 0.85rem; }
+    .plan {
+      color: var(--muted-foreground, #888);
+      font-size: 0.72rem;
+    }
+    .dot {
+      width: 0.5rem; height: 0.5rem; border-radius: 99px;
+      background: var(--muted-foreground, #888);
+      flex: none;
+    }
+    .dot.ok { background: #3dba7a; }
+    .dot.warn { background: #e0a100; }
+    .dot.error { background: #e25555; }
+    .dot.offline, .dot.unconfigured { background: var(--muted-foreground, #888); }
+    .detail {
+      color: var(--muted-foreground, #888);
+      font-size: 0.75rem;
+      margin: 0.35rem 0 0;
+      line-height: 1.35;
+    }
+    .bar {
+      height: 6px;
+      border-radius: 99px;
+      background: color-mix(in srgb, var(--border, #444) 80%, transparent);
+      margin-top: 0.45rem;
+      overflow: hidden;
+    }
+    .bar > i {
+      display: block;
+      height: 100%;
+      background: var(--accent, #6ea8ff);
+      width: 0%;
+    }
+    .bar.warn > i { background: #e0a100; }
+    .bar.error > i { background: #e25555; }
+    .local, .win {
+      font-size: 0.72rem;
+      color: var(--muted-foreground, #888);
+      margin-top: 0.25rem;
+    }
+    a { color: var(--accent, #6ea8ff); }
+    .err { color: #e25555; font-size: 0.8rem; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>AI usage</h1>
+      <span class="meta" id="stamp">loading…</span>
+      <button type="button" id="refresh">Refresh</button>
+    </header>
+    <div id="cards"></div>
+  </div>
+  <script>
+    const API = "/api/ai-usage";
+    const REFRESH = "/api/ai-usage/refresh";
+    const fmt = (n) => n == null ? "—" : Number(n).toLocaleString();
+    function render(data) {
+      const stamp = document.getElementById("stamp");
+      stamp.textContent = data.generated_at
+        ? new Date(data.generated_at).toLocaleString()
+        : "no snapshot";
+      const root = document.getElementById("cards");
+      root.innerHTML = "";
+      (data.providers || []).forEach((p) => {
+        const win = (p.windows || [])[0];
+        const used = win && win.used_percent != null ? win.used_percent : null;
+        const card = document.createElement("div");
+        card.className = "card";
+        const barClass = used == null ? "" : (used >= 92 ? "error" : used >= 75 ? "warn" : "");
+        const local = p.local
+          ? `${fmt(p.local.calls)} Hermes calls · ${fmt(p.local.input_tokens)} in / ${fmt(p.local.output_tokens)} out`
+          : "";
+        const winLine = win
+          ? `${win.label}: ${win.remaining_percent != null ? win.remaining_percent + "% left" : "n/a"}${win.resets_at ? " · resets " + new Date(win.resets_at).toLocaleString() : ""}`
+          : "";
+        card.innerHTML = `
+          <div class="row">
+            <span class="dot ${p.status || ""}"></span>
+            <span class="name">${p.name}</span>
+            <span class="plan">${p.plan || p.status}</span>
+          </div>
+          <p class="detail">${p.detail || ""}</p>
+          ${used != null ? `<div class="bar ${barClass}"><i style="width:${Math.min(100, used)}%"></i></div>` : ""}
+          ${winLine ? `<div class="win">${winLine}</div>` : ""}
+          ${local ? `<div class="local">${local}</div>` : ""}
+        `;
+        root.appendChild(card);
+      });
+    }
+    async function load() {
+      try {
+        const res = await fetch(API, { cache: "no-store" });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        render(await res.json());
+      } catch (err) {
+        document.getElementById("stamp").textContent = "unavailable";
+        document.getElementById("cards").innerHTML =
+          `<p class="err">Could not load usage snapshot.</p>`;
+      }
+    }
+    document.getElementById("refresh").addEventListener("click", async () => {
+      document.getElementById("stamp").textContent = "refreshing…";
+      try {
+        const res = await fetch(REFRESH, { method: "POST" });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        render(await res.json());
+      } catch (err) {
+        await load();
+      }
+    });
+    load();
+    setInterval(load, 60000);
+  </script>
+</body>
+</html>

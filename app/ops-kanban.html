@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>SightOps</title>
+  <meta name="theme-color" content="#131313">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="SightOps">
+  <link rel="manifest" href="dashboard.webmanifest">
+  <link rel="icon" sizes="192x192" href="dashboard-icon-192.png">
+  <link rel="apple-touch-icon" href="dashboard-icon-192.png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --sb-charcoal: #131313;
+      --sb-charcoal-raised: #191919;
+      --sb-charcoal-elevated: #252525;
+      --sb-white: #ffffff;
+      --sb-grey-light: #c4c4c4;
+      --sb-grey-medium: #7a7a7a;
+      --sb-cyan: #00ffff;
+      --sb-blue: #3296ff;
+      --sb-magenta: #ff50ff;
+      --sb-purple: #713fff;
+      --sb-gradient-spectrum: linear-gradient(135deg, #ff50ff 0%, #713fff 33%, #3296ff 66%, #00ebff 100%);
+      --font-display: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      --font-body: "Inter", "Helvetica Neue", Arial, sans-serif;
+      --font-mono: "Space Mono", ui-monospace, "SFMono-Regular", monospace;
+      --border-subtle: rgba(255,255,255,0.15);
+      --border-hairline: rgba(255,255,255,0.5);
+      --ring-subtle: inset 0 0 0 0.5px var(--border-subtle);
+      --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+      --duration-fast: 120ms;
+      --duration-normal: 200ms;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; background: var(--sb-charcoal); color: var(--sb-white); }
+    body {
+      font-family: var(--font-body);
+      display: flex;
+      flex-direction: column;
+      min-height: 100dvh;
+    }
+    button, input { font: inherit; color: inherit; }
+    a { color: inherit; }
+    .topbar { height: 3px; background: var(--sb-gradient-spectrum); flex-shrink: 0; }
+    .chrome {
+      display: grid;
+      grid-template-columns: minmax(180px, 1fr) minmax(220px, 420px) auto;
+      gap: 16px;
+      align-items: end;
+      padding: 18px 20px 12px;
+      border-bottom: 0.5px solid var(--border-subtle);
+    }
+    .mast h1 {
+      font-family: var(--font-display);
+      font-size: 42px;
+      line-height: 0.9;
+      letter-spacing: -0.03em;
+      margin: 0;
+      font-weight: 700;
+    }
+    .k {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--sb-grey-medium);
+    }
+    .stamp { margin-top: 8px; color: var(--sb-grey-light); font-size: 12px; }
+    .search {
+      background: var(--sb-charcoal-raised);
+      box-shadow: var(--ring-subtle);
+      border: 0;
+      height: 44px;
+      padding: 0 12px;
+      width: 100%;
+    }
+    .search:focus { outline: 1px solid var(--sb-cyan); }
+    .tools { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+    .seg, .btn {
+      background: var(--sb-charcoal-raised);
+      box-shadow: var(--ring-subtle);
+      border: 0;
+      min-height: 36px;
+      padding: 0 12px;
+      cursor: pointer;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+    }
+    .seg[aria-pressed="true"], .btn.primary { background: var(--sb-white); color: var(--sb-charcoal); box-shadow: none; }
+    .btn:disabled { opacity: 0.45; cursor: wait; }
+    .rail {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 10px 20px;
+      border-bottom: 0.5px solid var(--border-subtle);
+      font-size: 14px;
+    }
+    .rail b { font-family: var(--font-display); }
+    .rail a { color: var(--sb-cyan); text-decoration: none; }
+    .board {
+      flex: 1;
+      display: grid;
+      grid-template-columns: repeat(6, minmax(220px, 1fr));
+      gap: 8px;
+      padding: 12px 12px 24px;
+      overflow: auto;
+      align-items: start;
+    }
+    .col {
+      background: var(--sb-charcoal-raised);
+      box-shadow: var(--ring-subtle);
+      min-height: calc(100dvh - 180px);
+      display: flex;
+      flex-direction: column;
+    }
+    .col.over { outline: 1px solid var(--sb-cyan); }
+    .col-h {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px;
+      position: sticky;
+      top: 0;
+      background: var(--sb-charcoal-raised);
+      z-index: 1;
+    }
+    .marker { width: 10px; height: 10px; background: var(--sb-cyan); flex-shrink: 0; }
+    .col[data-col="inbox"] .marker { background: var(--sb-grey-medium); }
+    .col[data-col="ready"] .marker { background: var(--sb-blue); }
+    .col[data-col="doing"] .marker { background: var(--sb-cyan); }
+    .col[data-col="review"] .marker { background: var(--sb-purple); }
+    .col[data-col="waiting"] .marker { background: var(--sb-magenta); }
+    .col[data-col="done"] .marker { background: var(--sb-white); }
+    .col-h h2 {
+      font-family: var(--font-display);
+      font-size: 20px;
+      margin: 0;
+      letter-spacing: -0.02em;
+      font-weight: 700;
+    }
+    .count {
+      margin-left: auto;
+      background: var(--sb-white);
+      color: var(--sb-charcoal);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      padding: 2px 8px;
+    }
+    .stack { display: flex; flex-direction: column; gap: 8px; padding: 0 8px 12px; min-height: 80px; }
+    .card {
+      background: var(--sb-charcoal-elevated);
+      box-shadow: var(--ring-subtle);
+      padding: 10px;
+      cursor: grab;
+      display: grid;
+      gap: 6px;
+    }
+    .card.selected { outline: 1px solid var(--sb-cyan); }
+    .card.busy { opacity: 0.55; }
+    .card-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--sb-grey-medium);
+    }
+    .cat { width: 8px; height: 8px; flex-shrink: 0; }
+    .cat.PERSONAL { background: var(--sb-blue); }
+    .cat.SIGHTBOX { background: var(--sb-cyan); }
+    .cat.FLUX { background: var(--sb-magenta); }
+    .title {
+      font-size: 15px;
+      line-height: 1.25;
+      text-decoration: none;
+      color: var(--sb-white);
+    }
+    .title:hover { color: var(--sb-cyan); }
+    .foot {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      color: var(--sb-grey-light);
+      font-size: 12px;
+    }
+    .due.overdue { color: var(--sb-magenta); }
+    .due.today { color: var(--sb-cyan); }
+    .owner { color: var(--sb-grey-light); }
+    .prio {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--sb-grey-medium);
+    }
+    .prio.high { color: var(--sb-white); }
+    .empty {
+      padding: 16px 12px;
+      color: var(--sb-grey-medium);
+      font-size: 13px;
+    }
+    .toast {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      background: var(--sb-white);
+      color: var(--sb-charcoal);
+      padding: 10px 14px;
+      font-size: 13px;
+      max-width: min(420px, calc(100vw - 32px));
+      z-index: 20;
+    }
+    .hidden { display: none !important; }
+    .day-strip { display: grid; grid-template-columns: 1.2fr 1fr; gap: 8px; padding: 0 12px 12px; }
+    .day-panel { background: var(--sb-charcoal-raised); box-shadow: var(--ring-subtle); padding: 12px; min-width: 0; }
+    .day-panel h2 { font-family: var(--font-display); font-size: 17px; margin: 0 0 10px; }
+    .day-list { display: grid; gap: 7px; }
+    .day-item { border-left: 2px solid var(--sb-cyan); padding-left: 9px; font-size: 12px; line-height: 1.35; }
+    .day-item.personal { border-color: var(--sb-blue); }
+    .day-item.past { color: var(--sb-grey-medium); border-color: var(--sb-grey-medium); opacity: 0.62; }
+    .day-item .muted { color: var(--sb-grey-medium); font-family: var(--font-mono); font-size: 10px; }
+    .day-item a { color: var(--sb-white); text-decoration: none; }
+    .day-item a:hover { color: var(--sb-cyan); }
+    .day-item.past a { color: var(--sb-grey-medium); }
+    .day-item.past a:hover { color: var(--sb-grey-light); }
+    .day-empty { color: var(--sb-grey-medium); font-size: 12px; }
+    @media (max-width: 980px) {
+      .chrome { grid-template-columns: 1fr; }
+      .tools { justify-content: flex-start; }
+      .board { grid-template-columns: repeat(6, minmax(78vw, 1fr)); scroll-snap-type: x mandatory; }
+      .col { scroll-snap-align: start; min-height: 70dvh; }
+      .mast h1 { font-size: 32px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar"></div>
+  <header class="chrome">
+    <div class="mast">
+      <div class="k">Max / SightOps</div>
+      <h1>SightOps</h1>
+      <div class="stamp" id="stamp">Loading board</div>
+    </div>
+    <input class="search" id="q" type="search" placeholder="Search title, list, owner" aria-label="Search tasks">
+    <div class="tools">
+      <button class="seg" data-area="ALL" aria-pressed="true">All</button>
+      <button class="seg" data-area="PERSONAL" aria-pressed="false">Personal</button>
+      <button class="seg" data-area="SIGHTBOX" aria-pressed="false">Sightbox</button>
+      <button class="seg" data-area="FLUX" aria-pressed="false">Flux</button>
+      <button class="seg" data-view="attention" aria-pressed="true">Now</button>
+      <button class="seg" data-view="all" aria-pressed="false">All open</button>
+      <a class="btn" href="/notion-dashboard.html">Monitor</a>
+      <button class="btn" id="refresh">Refresh</button>
+      <button class="btn primary hidden" id="install">Install app</button>
+    </div>
+  </header>
+  <div class="rail" id="rail"><span>Board is local-only. Drag a card to write Status in Notion.</span><span id="counts"></span></div>
+  <section class="day-strip" id="day-strip" hidden>
+    <div class="day-panel"><h2>Today’s events</h2><div class="day-list" id="events-list"></div></div>
+    <div class="day-panel"><h2>Hourly chron summary</h2><div class="day-list" id="hourly-list"></div></div>
+  </section>
+  <main class="board" id="board" hidden></main>
+  <div class="toast hidden" id="toast"></div>
+  <script>
+    const COL_COLOR = {inbox:'Inbox',ready:'Ready',doing:'Doing',review:'Review',waiting:'Waiting',done:'Done'};
+    const state = {
+      board: null,
+      area: 'ALL',
+      view: 'attention',
+      query: '',
+      selected: null,
+      installEvt: null,
+    };
+
+    const $ = (id) => document.getElementById(id);
+    const toast = (msg) => {
+      const el = $('toast');
+      el.textContent = msg;
+      el.classList.toggle('hidden', !msg);
+      if (msg) setTimeout(() => { if (el.textContent === msg) el.classList.add('hidden'); }, 4200);
+    };
+
+    const PEOPLE = {
+      '1cb13004-8266-40b6-92da-63771be9b248': 'Nathan',
+      'db244d9b-5d0e-4da3-8449-367242b98f17': 'Charlie',
+      '1c2d872b-594c-8166-b4de-0002d30dcfad': 'Charlie',
+      '380d872b-594c-818e-9b01-000283f4f77b': 'Brian',
+    };
+    const UUID_RE = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi;
+    const PRIORITY_RANK = {
+      high: 'high', urgent: 'high', now: 'high', p1: 'high',
+      medium: 'med', next: 'med', p2: 'med',
+      low: 'low', later: 'low', p3: 'low',
+    };
+
+    // Owner arrives either as a display name ("Charlie") or as a stringified
+    // Notion person array ("[\"user://<id>\"]"). Resolve ids to names, and
+    // render nothing for an id we cannot resolve. Never show a raw identifier.
+    function ownerName(raw) {
+      const value = String(raw || '').trim();
+      if (!value || !value.includes('user://')) return value;
+      const ids = value.match(UUID_RE) || [];
+      return ids.map((id) => PEOPLE[id.toLowerCase()]).filter(Boolean).join(', ');
+    }
+
+    // Priority keeps each source's own words. Only the visual weight is shared,
+    // so High / P1 / Now read alike without any vocabulary being rewritten.
+    function priorityRank(raw) {
+      return PRIORITY_RANK[String(raw || '').trim().toLowerCase()] || '';
+    }
+
+    function visibleCards() {
+      const q = state.query.trim().toLowerCase();
+      return (state.board?.cards || []).filter((card) => {
+        if (card.column === 'parked') return false;
+        if (state.area !== 'ALL' && card.category !== state.area) return false;
+        if (state.view === 'attention' && !card.attention && card.column !== 'doing' && card.column !== 'review' && card.column !== 'waiting') return false;
+        if (!q) return true;
+        return [card.title, card.db_name, ownerName(card.owner), card.notes, card.status].join(' ').toLowerCase().includes(q);
+      });
+    }
+
+    function dueClass(card) {
+      if (!card.parsed_due || !state.board?.today) return '';
+      if (card.parsed_due < state.board.today) return 'overdue';
+      if (card.parsed_due === state.board.today) return 'today';
+      return '';
+    }
+
+    function fmtDate(value) {
+      if (!value) return '';
+      const d = value.slice(0, 10).split('-');
+      if (d.length !== 3) return value;
+      return `${Number(d[1])}/${Number(d[2])}/${d[0]}`;
+    }
+
+    function fmtTime(value, allDay) {
+      if (allDay) return 'All day';
+      const d = new Date(value);
+      if (Number.isNaN(d.getTime())) return value;
+      return d.toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'});
+    }
+
+    function eventHasPassed(event) {
+      if (event.is_all_day || !event.end) return false;
+      const end = new Date(event.end);
+      return !Number.isNaN(end.getTime()) && end.getTime() <= Date.now();
+    }
+
+    function renderDayPanels() {
+      const events = (state.board?.calendar_events || []).filter((event) => String(event.start || '').slice(0, 10) === state.board?.today);
+      // The server returns newest first; show only the latest chron summary.
+      const summaries = (state.board?.hourly_summaries || []).slice(0, 1);
+      $('day-strip').hidden = false;
+      $('events-list').innerHTML = events.length ? events.map((event) => {
+        const label = `${fmtTime(event.start, event.is_all_day)}${event.is_all_day ? '' : `–${fmtTime(event.end, false)}`}`;
+        const title = event.html_link ? `<a href="${escapeAttr(event.html_link)}" target="_blank" rel="noopener">${escapeHtml(event.summary)}</a>` : escapeHtml(event.summary);
+        const classes = [];
+        if (/personal|family|team thompson/i.test(event.calendar || '')) classes.push('personal');
+        if (eventHasPassed(event)) classes.push('past');
+        return `<div class="day-item${classes.length ? ` ${classes.join(' ')}` : ''}"><div><b>${label}</b> · ${title}</div><div class="muted">${escapeHtml(event.calendar || '')}${event.location ? ` · ${escapeHtml(event.location)}` : ''}</div></div>`;
+      }).join('') : '<div class="day-empty">No events found.</div>';
+      $('hourly-list').innerHTML = summaries.length ? summaries.map((item) => `<div class="day-item"><div class="muted">${escapeHtml(item.timestamp || '')}</div><div>${escapeHtml(item.text).replace(/\n/g, '<br>')}</div></div>`).join('') : '<div class="day-empty">No hourly summary found.</div>';
+    }
+
+    function render() {
+      renderDayPanels();
+      const boardEl = $('board');
+      const cards = visibleCards();
+      const grouped = Object.fromEntries(Object.keys(COL_COLOR).map((id) => [id, []]));
+      cards.forEach((card) => {
+        if (grouped[card.column]) grouped[card.column].push(card);
+      });
+      boardEl.hidden = false;
+      boardEl.innerHTML = Object.keys(COL_COLOR).map((id) => {
+        const list = grouped[id];
+        const body = list.length ? list.map((card) => `
+          <article class="card${state.selected === card.page_id ? ' selected' : ''}" draggable="true" data-id="${card.page_id}" data-col="${card.column}">
+            <div class="card-meta"><span class="cat ${card.category}"></span><span>${escapeHtml(card.db_name || '')}</span></div>
+            <a class="title" href="${escapeAttr(card.page_url)}" target="_blank" rel="noopener">${escapeHtml(card.title)}</a>
+            <div class="foot">
+              <span class="due ${dueClass(card)}">${card.parsed_due ? fmtDate(card.parsed_due) : 'No date'}</span>
+              <span class="owner">${escapeHtml(ownerName(card.owner))}</span>
+              <span class="prio ${priorityRank(card.priority)}">${escapeHtml(card.priority || '')}</span>
+            </div>
+          </article>`).join('') : `<div class="empty">Empty</div>`;
+        return `<section class="col" data-col="${id}">
+          <div class="col-h"><span class="marker"></span><h2>${COL_COLOR[id]}</h2><span class="count">${list.length}</span></div>
+          <div class="stack">${body}</div>
+        </section>`;
+      }).join('');
+      const stamp = state.board?.generated_at ? `Snapshot ${state.board.generated_at.replace('T', ' ').slice(0, 16)}` : 'No snapshot yet';
+      $('stamp').textContent = `${stamp} · ${state.board?.attention_total || 0} now / ${state.board?.total || 0} open`;
+      const need = state.board?.needs_you;
+      $('rail').firstElementChild.innerHTML = need
+        ? `Needs you: <b>${escapeHtml(need.title)}</b> · ${need.kind === 'today' ? 'due today' : 'overdue'} · <a href="${escapeAttr(need.page_url)}" target="_blank" rel="noopener">Open in Notion</a>`
+        : 'Nothing overdue or due today. Drag a card to write Status in Notion.';
+      $('counts').textContent = `${cards.length} on board`;
+      bindBoard();
+    }
+
+    function escapeHtml(value) {
+      return String(value || '').replace(/[&<>"']/g, (ch) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+    }
+    function escapeAttr(value) { return escapeHtml(value); }
+
+    function bindBoard() {
+      document.querySelectorAll('.card').forEach((card) => {
+        card.addEventListener('click', (event) => {
+          if (event.target.closest('a')) return;
+          state.selected = card.dataset.id;
+          render();
+        });
+        card.addEventListener('dragstart', (event) => {
+          event.dataTransfer.setData('text/plain', card.dataset.id);
+          state.selected = card.dataset.id;
+        });
+      });
+      document.querySelectorAll('.col').forEach((col) => {
+        col.addEventListener('dragover', (event) => {
+          event.preventDefault();
+          col.classList.add('over');
+        });
+        col.addEventListener('dragleave', () => col.classList.remove('over'));
+        col.addEventListener('drop', (event) => {
+          event.preventDefault();
+          col.classList.remove('over');
+          const id = event.dataTransfer.getData('text/plain');
+          moveCard(id, col.dataset.col);
+        });
+      });
+    }
+
+    async function loadBoard() {
+      const res = await fetch('/api/board', { cache: 'no-store' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Could not load board');
+      state.board = data;
+      render();
+    }
+
+    async function moveCard(pageId, column) {
+      const card = (state.board?.cards || []).find((item) => item.page_id === pageId);
+      if (!card || card.column === column) return;
+      const previous = card.status;
+      card.column = column;
+      card.status = column;
+      render();
+      const el = document.querySelector(`[data-id="${pageId}"]`);
+      if (el) el.classList.add('busy');
+      try {
+        const res = await fetch('/api/tasks', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ page_id: pageId, column }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Move failed');
+        state.board = data;
+        render();
+        const moved = data.moved || {};
+        toast(moved.unchanged ? 'Already there' : `Wrote ${moved.status} to Notion`);
+      } catch (err) {
+        card.column = column_for_fallback(previous);
+        card.status = previous;
+        render();
+        toast(String(err.message || err));
+      }
+    }
+
+    function column_for_fallback(status) {
+      const map = {
+        '': 'inbox', backlog: 'inbox', 'not started': 'ready', 'in progress': 'doing',
+        'to review': 'review', 'in review': 'review', waiting: 'waiting', done: 'done',
+      };
+      return map[String(status || '').toLowerCase()] || 'inbox';
+    }
+
+    document.querySelectorAll('[data-area]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        state.area = btn.dataset.area;
+        document.querySelectorAll('[data-area]').forEach((el) => el.setAttribute('aria-pressed', String(el === btn)));
+        render();
+      });
+    });
+    document.querySelectorAll('[data-view]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        state.view = btn.dataset.view;
+        document.querySelectorAll('[data-view]').forEach((el) => el.setAttribute('aria-pressed', String(el === btn)));
+        render();
+      });
+    });
+    $('q').addEventListener('input', (event) => {
+      state.query = event.target.value;
+      render();
+    });
+    $('refresh').addEventListener('click', async () => {
+      $('refresh').disabled = true;
+      toast('Refreshing from Notion');
+      try {
+        const res = await fetch('/api/refresh', { method: 'POST' });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Refresh failed');
+        state.board = data;
+        render();
+        toast('Board refreshed');
+      } catch (err) {
+        toast(String(err.message || err));
+      } finally {
+        $('refresh').disabled = false;
+      }
+    });
+
+    window.addEventListener('keydown', (event) => {
+      if (event.target === $('q')) return;
+      if (event.key === '/') {
+        event.preventDefault();
+        $('q').focus();
+        return;
+      }
+      const cols = Object.keys(COL_COLOR);
+      if (state.selected && event.key >= '1' && event.key <= String(cols.length)) {
+        moveCard(state.selected, cols[Number(event.key) - 1]);
+      }
+    });
+
+    window.addEventListener('beforeinstallprompt', (event) => {
+      event.preventDefault();
+      state.installEvt = event;
+      $('install').classList.remove('hidden');
+    });
+    $('install').addEventListener('click', async () => {
+      if (!state.installEvt) return;
+      state.installEvt.prompt();
+      await state.installEvt.userChoice;
+      $('install').classList.add('hidden');
+    });
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('/dashboard-sw.js'));
+    }
+
+    loadBoard().catch((err) => toast(String(err.message || err)));
+    // Re-render periodically so an in-progress event greys out after it ends.
+    setInterval(() => { if (state.board) renderDayPanels(); }, 30000);
+  </script>
+</body>
+</html>

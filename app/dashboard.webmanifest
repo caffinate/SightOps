@@ -1,0 +1,16 @@
+{
+  "name": "SightOps",
+  "short_name": "SightOps",
+  "description": "Nathan's local operations Kanban for Personal and Sightbox work.",
+  "id": "./ops-kanban.html",
+  "start_url": "./ops-kanban.html",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone"],
+  "background_color": "#131313",
+  "theme_color": "#131313",
+  "icons": [
+    {"src": "dashboard-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
+    {"src": "dashboard-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+  ]
+}
