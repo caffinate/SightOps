@@ -7,6 +7,8 @@
   python3 -m desk payload           print the notion-update-page calls that would be sent
   python3 -m desk send              send the payload and read every write back
   python3 -m desk propose <task> <property> <value> [note]   queue an agent proposal for the gate
+  python3 -m desk clipboard         list the Clipboard rows with their ids, states and the task each points at
+  python3 -m desk rule <row> <state> [call]   queue a ruling on a Clipboard row (Adjudicated needs a call)
   python3 -m desk register-config   print the three Room Register values per wired room
 """
 from __future__ import annotations
@@ -81,6 +83,18 @@ def main(argv: list[str]) -> int:
             value = json.loads(value)
         change = service.change(argv[2], argv[3], value, cfg.AUTHOR_AGENT, argv[5] if len(argv) > 5 else "")
         print(json.dumps(change.as_dict(), indent=1, ensure_ascii=False))
+        return 0
+    if command == "clipboard":
+        for item in service.desk.clipboard_items:
+            where = f" -> {item['task_title']}" if item["task_known"] else (" -> (points at a row the desk does not hold)" if item["task_url"] else "")
+            print(f"{item['id']}  {item['state'] or 'no state':<12} {item['type'] or '':<14} {item['item'] or '(untitled row)'}{where}")
+        return 0
+    if command == "rule":
+        if len(argv) < 4:
+            print("usage: rule <clipboard row id> <state> [call]", file=sys.stderr)
+            return 2
+        changes = service.rule(argv[2], argv[4] if len(argv) > 4 else "", argv[3])
+        print(json.dumps([c.as_dict() for c in changes], indent=1, ensure_ascii=False))
         return 0
     if command == "register-config":
         for room in service.desk.rooms:

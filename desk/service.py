@@ -78,9 +78,15 @@ class DeskService:
     def rebuild(self) -> None:
         self.desk = Desk(self.snapshot)
 
+    def _sync(self) -> None:
+        """Pick up queue changes another process wrote, such as a proposal from the terminal while the server runs."""
+        if self.queue.reload_if_changed():
+            self._replay_local()
+
     # ---- reads ------------------------------------------------------------
     def view(self) -> dict[str, Any]:
         with self.lock:
+            self._sync()
             data = self.desk.as_dict()
             pending_by_task: dict[str, list[dict[str, Any]]] = {}
             for change in self.queue.pending():
@@ -105,6 +111,7 @@ class DeskService:
 
     def payload(self) -> list[dict[str, Any]]:
         with self.lock:
+            self._sync()
             return self.queue.payload(self.desk.schema_for_room, self._room_name, self._data_source)
 
     def _room_name(self, room_id: str) -> str:
@@ -127,6 +134,7 @@ class DeskService:
     # ---- the one write path -----------------------------------------------
     def change(self, task_id: str, prop: str, to_value: Any, by: str, note: str = "") -> Change:
         with self.lock:
+            self._sync()
             task_id = normalise_id(task_id) or task_id
             room_id, room_name, schema, current, title = self._target(task_id)
             if prop not in schema:
@@ -212,6 +220,7 @@ class DeskService:
     def create_task(self, room_id: str, title: str, by: str) -> Change:
         """Queue a new row. Creation is a change like any other, attributed and gated."""
         with self.lock:
+            self._sync()
             room = self.desk.room_by_id[room_id]
             if not room.wired:
                 raise ValueError(f"{room.name} has no Tasks database")
@@ -258,6 +267,7 @@ class DeskService:
     # ---- the gate ---------------------------------------------------------
     def accept(self, change_id: str, edited_to: Any = None, file: bool = True) -> Change:
         with self.lock:
+            self._sync()
             change = self.queue.accept(change_id, edited_to)
             self._apply_locally(change)
             self.rebuild()
@@ -267,6 +277,7 @@ class DeskService:
 
     def reject(self, change_id: str, reason: str = "", file: bool = True) -> Change:
         with self.lock:
+            self._sync()
             change = self.queue.reject(change_id, reason)
             if file:
                 self.file_decision(change, f"Rejected. {reason.strip()}" if reason.strip() else "Rejected.")
@@ -274,6 +285,7 @@ class DeskService:
 
     def respond(self, change_id: str, text: str, file: bool = True) -> Change:
         with self.lock:
+            self._sync()
             change = self.queue.respond(change_id, text)
             if file:
                 self.file_decision(change, f"Returned to the agent: {text.strip()}")
@@ -281,10 +293,12 @@ class DeskService:
 
     def ignore(self, change_id: str) -> Change:
         with self.lock:
+            self._sync()
             return self.queue.ignore(change_id)
 
     def discard(self, change_id: str) -> Change:
         with self.lock:
+            self._sync()
             change = self.queue.get(change_id)
             if change is None:
                 raise KeyError(change_id)
@@ -298,6 +312,7 @@ class DeskService:
     # ---- sending and refreshing -------------------------------------------
     def send(self, client: Any = None, verify: bool = True) -> dict[str, Any]:
         with self.lock:
+            self._sync()
             client = client or self.notion()
             if client is None:
                 return {"sent": False, "reason": "no credential", "payload": self.payload()}

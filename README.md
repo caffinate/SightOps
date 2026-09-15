@@ -13,6 +13,8 @@ python3 -m desk serve            # http://127.0.0.1:3100/desk.html
 python3 -m desk findings         # the dirt, room by room, on the terminal
 python3 -m desk payload          # the exact notion-update-page calls pending
 python3 -m desk send             # send them and read every write back
+python3 -m desk clipboard        # the Clipboard rows, with ids and the task each points at
+python3 -m desk rule ID STATE "the call"   # queue a ruling on a Clipboard row
 python3 -m desk auth             # give the desk its own Notion MCP connection
 python3 -m desk snapshot         # pull a live snapshot into DESK_HOME
 python3 -m unittest discover -s tests

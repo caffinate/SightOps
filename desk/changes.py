@@ -77,9 +77,23 @@ class PendingQueue:
     def __init__(self, path: Path | str | None = None) -> None:
         self.path = Path(path) if path else None
         self.changes: list[Change] = []
+        self._mtime: int | None = None
+        self._load()
+
+    def _load(self) -> None:
         if self.path and self.path.exists():
             data = json.loads(self.path.read_text(encoding="utf-8"))
             self.changes = [Change.from_dict(c) for c in data.get("changes", [])]
+            self._mtime = self.path.stat().st_mtime_ns
+
+    def reload_if_changed(self) -> bool:
+        """Pick up what another process wrote to the same file, such as a proposal made from the terminal while the server runs."""
+        if not self.path or not self.path.exists():
+            return False
+        if self.path.stat().st_mtime_ns == self._mtime:
+            return False
+        self._load()
+        return True
 
     def save(self) -> None:
         if not self.path:
@@ -88,12 +102,14 @@ class PendingQueue:
         tmp = self.path.with_suffix(".json.tmp")
         tmp.write_text(json.dumps({"changes": [c.as_dict() for c in self.changes]}, indent=1, ensure_ascii=False), encoding="utf-8")
         tmp.replace(self.path)
+        self._mtime = self.path.stat().st_mtime_ns
 
     # ---- basic access -----------------------------------------------------
     def get(self, change_id: str) -> Change | None:
         return next((c for c in self.changes if c.id == change_id), None)
 
     def add(self, change: Change) -> Change:
+        self.reload_if_changed()
         self.changes.append(change)
         self.save()
         return change
@@ -150,6 +166,7 @@ class PendingQueue:
         return change
 
     def discard(self, change_id: str) -> Change:
+        self.reload_if_changed()
         change = self.get(change_id)
         if change is None:
             raise KeyError(change_id)
@@ -162,6 +179,7 @@ class PendingQueue:
         return change
 
     def _gated(self, change_id: str) -> Change:
+        self.reload_if_changed()
         change = self.get(change_id)
         if change is None:
             raise KeyError(change_id)
