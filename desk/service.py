@@ -11,13 +11,16 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+import uuid
+
+from . import clipboard as cb
 from . import config as cfg
 from .changes import Change, PendingQueue, QUEUED, SENDABLE
 from .model import Desk
 from .notion.client import FixtureNotionClient, MCPNotionClient
 from .notion.mcp import MCPClient
 from .schema import status_property, title_property
-from .snapshot import add_row, build_snapshot, load_fixture, load_snapshot, patch_row, save_snapshot
+from .snapshot import add_row, build_snapshot, find_row, load_fixture, load_snapshot, patch_row, save_snapshot
 from .values import normalise_id, values_equal
 
 
@@ -84,6 +87,8 @@ class DeskService:
                 pending_by_task.setdefault(change.task_id, []).append(change.as_dict())
             for task_id, task in data["tasks"].items():
                 task["pending"] = pending_by_task.get(task_id, [])
+            for item in data["clipboard"]["items"]:
+                item["pending"] = pending_by_task.get(item["id"], [])
             data["queue"] = {
                 "summary": self.queue.summary(),
                 "changes": [c.as_dict() for c in self.queue.changes if c.state in SENDABLE or c.state == "proposed"],
@@ -100,41 +105,109 @@ class DeskService:
 
     def payload(self) -> list[dict[str, Any]]:
         with self.lock:
-            return self.queue.payload(self.desk.schema_for_room, lambda rid: self.desk.room_by_id[rid].name,
-                                      lambda rid: self.desk.room_by_id[rid].tasks_source)
+            return self.queue.payload(self.desk.schema_for_room, self._room_name, self._data_source)
+
+    def _room_name(self, room_id: str) -> str:
+        return cb.TITLE if room_id == cfg.CLIPBOARD_ID else self.desk.room_by_id[room_id].name
+
+    def _data_source(self, room_id: str) -> str | None:
+        return cfg.CLIPBOARD_ID if room_id == cfg.CLIPBOARD_ID else self.desk.room_by_id[room_id].tasks_source
+
+    def _target(self, row_id: str) -> tuple[str, str, dict[str, dict], dict[str, Any], str]:
+        """Where a row lives: room id, room name, schema, current values, title. A Clipboard row is addressed like a task."""
+        task = self.desk.tasks.get(row_id)
+        if task is not None:
+            room = self.desk.room_by_id[task.room_id]
+            return room.id, room.name, self.desk.schema_for_room(room.id), task.props, task.title or "(untitled row)"
+        item = self.desk.clipboard_by_id.get(row_id)
+        if item is not None:
+            return cfg.CLIPBOARD_ID, cb.TITLE, self.desk.clipboard_schema, item["props"], item["item"] or "(untitled row)"
+        raise KeyError(f"no task or Clipboard row {row_id} on the desk")
 
     # ---- the one write path -----------------------------------------------
     def change(self, task_id: str, prop: str, to_value: Any, by: str, note: str = "") -> Change:
         with self.lock:
             task_id = normalise_id(task_id) or task_id
-            task = self.desk.tasks.get(task_id)
-            if task is None:
-                raise KeyError(f"no task {task_id} on the desk")
-            room = self.desk.room_by_id[task.room_id]
-            schema = self.desk.schema_for_room(room.id)
+            room_id, room_name, schema, current, title = self._target(task_id)
             if prop not in schema:
-                raise ValueError(f"'{prop}' is not a property of {room.name}'s database")
+                raise ValueError(f"'{prop}' is not a property of {room_name}'s database")
             spec = schema[prop]
             kind = spec.get("type")
             if kind in ("select", "status") and to_value not in (None, "") and spec.get("options") and to_value not in spec["options"]:
-                raise ValueError(f"'{to_value}' is not an option of {prop} in {room.name}; the options are {', '.join(spec['options'])}")
+                raise ValueError(f"'{to_value}' is not an option of {prop} in {room_name}; the options are {', '.join(spec['options'])}")
             if kind == "multi_select":
                 bad = [v for v in (to_value or []) if spec.get("options") and v not in spec["options"]]
                 if bad:
-                    raise ValueError(f"{', '.join(bad)} are not options of {prop} in {room.name}")
+                    raise ValueError(f"{', '.join(bad)} are not options of {prop} in {room_name}")
             if kind in ("person", "people"):
                 to_value = [normalise_id(v) for v in (to_value or []) if v]
             if by not in (cfg.AUTHOR_PERSON, cfg.AUTHOR_AGENT):
                 raise ValueError(f"author must be {cfg.AUTHOR_PERSON} or {cfg.AUTHOR_AGENT}")
-            from_value = task.props.get(prop)
+            from_value = current.get(prop)
             if values_equal(kind or "text", from_value, to_value):
                 raise ValueError(f"{prop} already is {to_value!r}; nothing to change")
-            change = Change.new(task_id, room.id, prop, from_value, to_value, by, title=task.title or "(untitled row)", note=note)
+            change = Change.new(task_id, room_id, prop, from_value, to_value, by, title=title, note=note)
             self.queue.add(change)
             if change.state == QUEUED:
                 self._apply_locally(change)
                 self.rebuild()
             return change
+
+    def rule(self, item_id: str, call: str, state: str = cb.ADJUDICATED, by: str = cfg.AUTHOR_PERSON) -> list[Change]:
+        """Rule on a Clipboard row from the desk: the call, the state and the date, queued like any other change."""
+        with self.lock:
+            item_id = normalise_id(item_id) or item_id
+            item = self.desk.clipboard_by_id.get(item_id)
+            if item is None:
+                raise KeyError(f"no Clipboard row {item_id} on the desk")
+            options = (self.desk.clipboard_schema.get(cb.STATE) or {}).get("options") or []
+            if options and state not in options:
+                raise ValueError(f"'{state}' is not a State of the Clipboard; the options are {', '.join(options)}")
+            call = (call or "").strip()
+            if state == cb.ADJUDICATED and not call:
+                raise ValueError("a ruling needs a call; say what was decided")
+            props = item["props"]
+            changes: list[Change] = []
+            if call and not values_equal("text", props.get(cb.CALL), call):
+                changes.append(self.change(item_id, cb.CALL, call, by))
+            if props.get(cb.STATE) != state:
+                changes.append(self.change(item_id, cb.STATE, state, by))
+            if not (props.get(cb.RULED) or {}).get("start"):
+                changes.append(self.change(item_id, cb.RULED, self.today(), by))
+            return changes
+
+    def file_decision(self, change: Change, ruling: str) -> Change | None:
+        """Record a gate decision as a Clipboard row that points at the task.
+
+        The row is queued as a create through the same write path: attributed
+        to the person who ruled, shown locally at once, sent with everything
+        else, and read back. Returns the create change, or None when the desk
+        no longer holds the task the decision was about.
+        """
+        with self.lock:
+            task = self.desk.tasks.get(change.task_id)
+            if task is None:
+                return None
+            room = self.desk.room_by_id[task.room_id]
+            decided = change.decided_at or self.now()
+            props = cb.decision_properties(task, room, change, ruling, decided)
+            schema = self.desk.clipboard_schema
+            page_id = uuid.uuid4().hex
+            item_text = props[cb.ITEM]
+            note = f"decision on {change.id}"
+            created = Change.new(page_id, cfg.CLIPBOARD_ID, cb.ITEM, None, item_text, cfg.AUTHOR_PERSON, title=item_text, note=note, kind="create")
+            self.queue.add(created)
+            self._apply_locally(created)
+            for prop, value in props.items():
+                if prop == cb.ITEM or prop not in schema or value in (None, "", []):
+                    continue
+                extra = Change.new(page_id, cfg.CLIPBOARD_ID, prop, None, value, cfg.AUTHOR_PERSON, title=item_text, note=note)
+                self.queue.add(extra)
+                self._apply_locally(extra)
+            change.history.append({"at": self.now(), "event": "filed", "clipboard_row": page_id})
+            self.queue.save()
+            self.rebuild()
+            return created
 
     def create_task(self, room_id: str, title: str, by: str) -> Change:
         """Queue a new row. Creation is a change like any other, attributed and gated."""
@@ -155,40 +228,56 @@ class DeskService:
                 self.rebuild()
             return change
 
-    def _apply_locally(self, change: Change) -> None:
-        room = self.desk.room_by_id.get(change.room_id)
+    def _store(self, room_id: str) -> tuple[str | None, dict[str, dict]]:
+        """The data source and schema a change's row lives in, or (None, {}) when the desk cannot hold it."""
+        if room_id == cfg.CLIPBOARD_ID:
+            return cfg.CLIPBOARD_ID, self.desk.clipboard_schema
+        room = self.desk.room_by_id.get(room_id)
         if room is None or not room.wired:
+            return None, {}
+        return room.tasks_source, self.desk.schema_for_room(room.id)
+
+    def _apply_locally(self, change: Change) -> None:
+        ds_id, schema = self._store(change.room_id)
+        if ds_id is None:
             return
         if change.kind == "create":
-            if self.desk.tasks.get(change.task_id) is None:
-                schema = self.desk.schema_for_room(room.id)
-                add_row(self.snapshot, room.tasks_source, change.task_id, f"local://{change.task_id}", title_property(schema) or "Task", change.to_value)
+            if find_row(self.snapshot, ds_id, change.task_id) is None:
+                add_row(self.snapshot, ds_id, change.task_id, f"local://{change.task_id}", title_property(schema) or "Task", change.to_value)
             return
-        prop_type = self.desk.property_type(room.id, change.property) or "text"
-        patch_row(self.snapshot, room.tasks_source, change.task_id, change.property, prop_type, change.to_value)
+        prop_type = (schema.get(change.property) or {}).get("type") or "text"
+        patch_row(self.snapshot, ds_id, change.task_id, change.property, prop_type, change.to_value)
 
     def _revert_locally(self, change: Change) -> None:
-        room = self.desk.room_by_id.get(change.room_id)
-        if room is None or not room.wired or change.kind == "create":
+        ds_id, schema = self._store(change.room_id)
+        if ds_id is None or change.kind == "create":
             return
-        prop_type = self.desk.property_type(room.id, change.property) or "text"
-        patch_row(self.snapshot, room.tasks_source, change.task_id, change.property, prop_type, change.from_value)
+        prop_type = (schema.get(change.property) or {}).get("type") or "text"
+        patch_row(self.snapshot, ds_id, change.task_id, change.property, prop_type, change.from_value)
 
     # ---- the gate ---------------------------------------------------------
-    def accept(self, change_id: str, edited_to: Any = None) -> Change:
+    def accept(self, change_id: str, edited_to: Any = None, file: bool = True) -> Change:
         with self.lock:
             change = self.queue.accept(change_id, edited_to)
             self._apply_locally(change)
             self.rebuild()
+            if file:
+                self.file_decision(change, f"Accepted as edited: {cb.brief(change.to_value)}." if change.edited else "Accepted.")
             return change
 
-    def reject(self, change_id: str, reason: str = "") -> Change:
+    def reject(self, change_id: str, reason: str = "", file: bool = True) -> Change:
         with self.lock:
-            return self.queue.reject(change_id, reason)
+            change = self.queue.reject(change_id, reason)
+            if file:
+                self.file_decision(change, f"Rejected. {reason.strip()}" if reason.strip() else "Rejected.")
+            return change
 
-    def respond(self, change_id: str, text: str) -> Change:
+    def respond(self, change_id: str, text: str, file: bool = True) -> Change:
         with self.lock:
-            return self.queue.respond(change_id, text)
+            change = self.queue.respond(change_id, text)
+            if file:
+                self.file_decision(change, f"Returned to the agent: {text.strip()}")
+            return change
 
     def ignore(self, change_id: str) -> Change:
         with self.lock:
@@ -212,8 +301,7 @@ class DeskService:
             client = client or self.notion()
             if client is None:
                 return {"sent": False, "reason": "no credential", "payload": self.payload()}
-            results = self.queue.send(client, self.desk.schema_for_room, lambda rid: self.desk.room_by_id[rid].name,
-                                      lambda rid: self.desk.room_by_id[rid].tasks_source, verify=verify)
+            results = self.queue.send(client, self.desk.schema_for_room, self._room_name, self._data_source, verify=verify)
             return {"sent": True, "results": results, "summary": self.queue.summary()}
 
     def refresh(self, client: Any = None) -> dict[str, Any]:
@@ -240,6 +328,9 @@ class DeskService:
 
     def now(self) -> str:
         return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+    def today(self) -> str:
+        return datetime.now(timezone.utc).date().isoformat()
 
 
 def fixture_service(tmp_dir: Path | str | None = None) -> DeskService:

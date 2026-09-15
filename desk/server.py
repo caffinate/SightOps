@@ -102,12 +102,13 @@ class DeskHandler(SimpleHTTPRequestHandler):
             elif path.startswith("/api/changes/"):
                 parts = path.split("/")
                 change_id, verb = parts[3], (parts[4] if len(parts) > 4 else "")
+                file = bool(body.get("file", True))
                 if verb == "accept":
-                    change = self.service.accept(change_id, body.get("to"))
+                    change = self.service.accept(change_id, body.get("to"), file=file)
                 elif verb == "reject":
-                    change = self.service.reject(change_id, str(body.get("reason") or ""))
+                    change = self.service.reject(change_id, str(body.get("reason") or ""), file=file)
                 elif verb == "respond":
-                    change = self.service.respond(change_id, str(body.get("text") or ""))
+                    change = self.service.respond(change_id, str(body.get("text") or ""), file=file)
                 elif verb == "ignore":
                     change = self.service.ignore(change_id)
                 elif verb == "discard":
@@ -116,6 +117,15 @@ class DeskHandler(SimpleHTTPRequestHandler):
                     self._send(404, {"error": "Not found"})
                     return
                 self._send(200, {"change": change.as_dict()})
+            elif path.startswith("/api/clipboard/"):
+                parts = path.split("/")
+                item_id, verb = parts[3], (parts[4] if len(parts) > 4 else "")
+                if verb != "rule":
+                    self._send(404, {"error": "Not found"})
+                    return
+                changes = self.service.rule(item_id, str(body.get("call") or ""), str(body.get("state") or "Adjudicated"), body.get("by") or cfg.AUTHOR_PERSON)
+                item = self.service.desk.clipboard_by_id.get(item_id)
+                self._send(201, {"changes": [c.as_dict() for c in changes], "item": {k: v for k, v in item.items() if k != "props"} if item else None})
             elif path == "/api/send":
                 self._send(200, self.service.send(verify=body.get("verify", True)))
             elif path == "/api/refresh":

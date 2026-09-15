@@ -66,6 +66,21 @@ class ServerTests(unittest.TestCase):
         status, data = self.call("GET", "/api/queue")
         self.assertEqual(data["summary"]["pending"], 0)
 
+    def test_rule_on_a_clipboard_row_over_http(self):
+        item = next(i for i in self.service.desk.clipboard_items if i["state"] == "Open")
+        status, data = self.call("POST", f"/api/clipboard/{item['id']}/rule", {"call": "Ruled from the desk", "state": "Adjudicated"})
+        self.assertEqual(status, 201, data)
+        self.assertEqual({c["property"] for c in data["changes"]}, {"Nathan call", "State", "Ruled"})
+        self.assertEqual(data["item"]["state"], "Adjudicated")
+        self.assertNotIn("props", data["item"])
+        status, data = self.call("POST", f"/api/clipboard/{item['id']}/rule", {"call": "", "state": "Adjudicated"})
+        self.assertEqual(status, 400)
+        self.assertEqual(self.call("POST", "/api/clipboard/zzz/rule", {"call": "x"})[0], 404)
+        self.assertEqual(self.call("POST", f"/api/clipboard/{item['id']}/nothing", {})[0], 404)
+        status, data = self.call("POST", "/api/send", {})
+        self.assertTrue(data["sent"])
+        self.assertEqual({r["state"] for r in data["results"]}, {"verified"})
+
     def test_unknown_routes(self):
         self.assertEqual(self.call("GET", "/api/nothing")[0], 404)
         self.assertEqual(self.call("POST", "/api/changes/zzz/accept", {})[0], 404)

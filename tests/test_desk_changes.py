@@ -157,7 +157,12 @@ class GateTests(unittest.TestCase):
         self.assertEqual(self.service.reject(c1.id, "not yet").state, "rejected")
         self.assertEqual(self.service.respond(c2.id, "look at the whole project first").response, "look at the whole project first")
         self.assertEqual(self.service.ignore(c3.id).state, "ignored")
-        self.assertEqual(self.service.payload(), [])
+        # Nothing is written to the task. The reject and the response are filed on the Clipboard; the ignore is not.
+        calls = self.service.payload()
+        self.assertFalse(any(c["task_id"] == self.task.id for c in calls))
+        self.assertEqual([c["tool"] for c in calls], ["notion-create-pages", "notion-create-pages"])
+        self.assertEqual([c["arguments"]["pages"][0]["properties"]["Nathan call"] for c in calls],
+                         ["Rejected. not yet", "Returned to the agent: look at the whole project first"])
         with self.assertRaises(ValueError):
             self.service.accept(c1.id)
 

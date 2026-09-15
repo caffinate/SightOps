@@ -12,6 +12,7 @@
     "Schemas are reduced to what the harness needs: property type, option names in Notion's order, status groups, relation targets. Option colours and option URLs were dropped.",
     "Clipboard rows carry the short columns only. Choices and Nathan call were not captured in full.",
     "Nothing in this fixture has been cleaned. The known dirt is in here on purpose.",
-    "Register rows carry the three per-room configuration fields (Grouping field, Status vocabulary, Owner field) created and populated on 14 Sep 2026 as build order 3, read back from Notion the same evening."
+    "Register rows carry the three per-room configuration fields (Grouping field, Status vocabulary, Owner field) created and populated on 14 Sep 2026 as build order 3, read back from Notion the same evening.",
+    "The Clipboard's schema was read on 15 Sep 2026, after its Task column (a URL, the pointer at a task page) was added as build order 5, and is stored under clipboard.schema. Its rows are still the 14 Sep read and none carries a Task yet."
   ]
 }

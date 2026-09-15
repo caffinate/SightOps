@@ -216,7 +216,7 @@ class FixtureNotionClient:
 
     def _find(self, page_id: str) -> tuple[dict[str, Any], dict[str, Any]]:
         pid = page_id.replace("-", "").lower()
-        for source in list(self.snapshot["sources"].values()) + [self.snapshot["register"]]:
+        for source in list(self.snapshot["sources"].values()) + [self.snapshot["register"], self.snapshot.get("clipboard") or {}]:
             for row in source.get("rows") or []:
                 if page_id_from_url(row.get("url")) == pid:
                     return source, row

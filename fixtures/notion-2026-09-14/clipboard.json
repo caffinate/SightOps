@@ -1,28 +1,303 @@
 {
-  "data_source_id": "9094f21d-feca-46b3-a8c8-24ab27048fd5",
-  "title": "The Clipboard",
-  "columns": ["url", "Item", "Type", "State", "Room", "Applies to", "Applied by", "date:Raised:start", "date:Ruled:start"],
-  "rows": [
-    {"url": "https://app.notion.com/3dbb26df546781a985a7c3397cbae94b", "Item": "Last filed is empty on all 39 register rows, including on the day six rulings were provably applied. The collector's staleness check has never had data to run on.", "Type": "Finding", "State": "Open", "Room": "[\"https://app.notion.com/3dbb26df546781049283f6132cebe74a\"]", "Applies to": null, "Applied by": null, "date:Raised:start": "2026-09-14", "date:Ruled:start": null},
-    {"url": "https://app.notion.com/3dbb26df5467815e902de3148c5374aa", "Item": "Two unlogged credit bursts since the notebook's 9/9 update (9/10, ~478cr; 9/13-14, ~202cr incl. a never-before-seen tool, GPT Image 2.5 Flare) plus a missing 9/10 daily check: did real session work happen that never reached Context or Notion?", "Type": "Open question", "State": "Open", "Room": "[\"https://app.notion.com/3dbb26df54678170bcd4ec989e39d0bd\"]", "Applies to": "[\"https://app.notion.com/3dbb26df54678170bcd4ec989e39d0bd\"]", "Applied by": null, "date:Raised:start": "2026-09-14", "date:Ruled:start": null},
-    {"url": "https://app.notion.com/3dbb26df54678125a44cfd8ead1ef39f", "Item": "Round One closed at zero with no verified or sent contacts across its whole window. How does the verdict get signed?", "Type": "Decision", "State": "Adjudicated", "Room": "[\"https://app.notion.com/3dbb26df54678175b1c4ca53a965c0bb\"]", "Applies to": "[\"https://app.notion.com/3dbb26df54678175b1c4ca53a965c0bb\"]", "Applied by": null, "date:Raised:start": "2026-09-14", "date:Ruled:start": "2026-09-14"},
-    {"url": "https://app.notion.com/3dbb26df54678152bf4ef9c8ec90351e", "Item": "Three drafted Jeremiah notes are sitting unsent, one time-boxed to this week. Send, hold, or consolidate?", "Type": "Decision", "State": "Adjudicated", "Room": "[\"https://app.notion.com/3dbb26df54678175b1c4ca53a965c0bb\"]", "Applies to": "[\"https://app.notion.com/3dbb26df54678175b1c4ca53a965c0bb\"]", "Applied by": null, "date:Raised:start": "2026-09-14", "date:Ruled:start": "2026-09-14"},
-    {"url": "https://app.notion.com/3dbb26df546781b9a288cb4d70dda7cb", "Item": "The Alkaline ruling went against its own recommendation, so the room that now holds the wrong record is not the room the row points at.", "Type": "Finding", "State": "Returned", "Room": "[\"https://app.notion.com/3dbb26df546781049283f6132cebe74a\"]", "Applies to": null, "Applied by": "Operating System", "date:Raised:start": "2026-09-14", "date:Ruled:start": "2026-09-14"},
-    {"url": "https://app.notion.com/3dbb26df546781e89adffbb44c4fa1cc", "Item": "Three rooms point at one Notion page: Sightbox 4.0 Transition Plan. Which of them actually owns it?", "Type": "Decision", "State": "Adjudicated", "Room": "[\"https://app.notion.com/3dbb26df546781049283f6132cebe74a\"]", "Applies to": "[\"https://app.notion.com/3dbb26df546781058419fbfa2e57ff95\"]", "Applied by": null, "date:Raised:start": "2026-09-14", "date:Ruled:start": "2026-09-14"},
-    {"url": "https://app.notion.com/3dbb26df5467816bb164c2e135a77fc7", "Item": "Eleven task databases have no room, and two more belong to rooms that share a home. Where does that work live?", "Type": "Decision", "State": "Adjudicated", "Room": "[\"https://app.notion.com/3dbb26df546781049283f6132cebe74a\"]", "Applies to": "[\"https://app.notion.com/3dbb26df546781049283f6132cebe74a\"]", "Applied by": null, "date:Raised:start": "2026-09-14", "date:Ruled:start": "2026-09-14"},
-    {"url": "https://app.notion.com/3dbb26df54678146bc23c888a0f372a4", "Item": "OLG Robotics Tasks holds only robotics work but carries a household schema it inherited. Clean it or leave it?", "Type": "Decision", "State": "Dropped", "Room": "[\"https://app.notion.com/3dbb26df546781049283f6132cebe74a\"]", "Applies to": "[\"https://app.notion.com/3dbb26df546781d3a7caffeb9e29f348\"]", "Applied by": null, "date:Raised:start": "2026-09-14", "date:Ruled:start": "2026-09-14"},
-    {"url": "https://app.notion.com/3dbb26df5467812aaf9beecade389485", "Item": "30 of 38 rooms have no clipboard, so the block tells them to write to a log that does not exist.", "Type": "Decision", "State": "Returned", "Room": "[\"https://app.notion.com/3dbb26df546781049283f6132cebe74a\"]", "Applies to": null, "Applied by": "Operating System", "date:Raised:start": "2026-09-14", "date:Ruled:start": "2026-09-14"},
-    {"url": "https://app.notion.com/3dbb26df546781f0a74ed555a22c3b9c", "Item": "Two Room Register homes are invalid addresses. The homeless count is 19, not 14 and not 12.", "Type": "Finding", "State": "Returned", "Room": "[\"https://app.notion.com/3dbb26df546781049283f6132cebe74a\"]", "Applies to": null, "Applied by": "Operating System", "date:Raised:start": "2026-09-14", "date:Ruled:start": "2026-09-14"},
-    {"url": "https://app.notion.com/3dbb26df546781199377fcc30ee1c6f0", "Item": "Is Suzette your partner or your sister? Memory records both.", "Type": "Decision", "State": "Adjudicated", "Room": "[\"https://app.notion.com/3dbb26df546781548b37ef2f2df3f73a\"]", "Applies to": "[\"https://app.notion.com/3dbb26df546781548b37ef2f2df3f73a\"]", "Applied by": null, "date:Raised:start": "2026-09-14", "date:Ruled:start": "2026-09-14"},
-    {"url": "https://app.notion.com/3dbb26df5467811ab1e3fabd5a1277b9", "Item": "Close the Sightbox Executive Assistant room? It was set up and never run.", "Type": "Decision", "State": "Adjudicated", "Room": "[\"https://app.notion.com/3dbb26df5467811a8b1dfa9bb0839004\"]", "Applies to": null, "Applied by": null, "date:Raised:start": "2026-09-14", "date:Ruled:start": "2026-09-14"},
-    {"url": "https://app.notion.com/3dbb26df54678160954dde2a319a0bcc", "Item": "Did the 4 September and 6 September reviews happen?", "Type": "Open question", "State": "Returned", "Room": "[\"https://app.notion.com/3dbb26df546781049283f6132cebe74a\"]", "Applies to": null, "Applied by": "Operating System", "date:Raised:start": "2026-09-14", "date:Ruled:start": "2026-09-14"},
-    {"url": "https://app.notion.com/3dbb26df54678162b240c173a631a2d3", "Item": "Magnitude: one room still holds The Command Center as the live creative direction after Rami killed it.", "Type": "Decision", "State": "Adjudicated", "Room": "[\"https://app.notion.com/3dbb26df54678164a406de2cb4ec3816\"]", "Applies to": "[\"https://app.notion.com/3dbb26df5467814db539f4353132b705\"]", "Applied by": null, "date:Raised:start": "2026-09-14", "date:Ruled:start": "2026-09-14"},
-    {"url": "https://app.notion.com/3dbb26df54678163aa87dfff3c37ecf5", "Item": "Flux is described three incompatible ways across three rooms. Which is canon?", "Type": "Decision", "State": "Adjudicated", "Room": "[\"https://app.notion.com/3dbb26df546781f49299c94965ca8ba1\"]", "Applies to": "[\"https://app.notion.com/3dbb26df5467814db539f4353132b705\",\"https://app.notion.com/3dbb26df546781f49299c94965ca8ba1\",\"https://app.notion.com/3dbb26df546781279e11e4350e0f1cb7\"]", "Applied by": null, "date:Raised:start": "2026-09-14", "date:Ruled:start": "2026-09-14"},
-    {"url": "https://app.notion.com/3dbb26df5467816dbab4e8952b772f17", "Item": "SightOps still cannot write to Notion. Two weeks, one command.", "Type": "Open question", "State": "Returned", "Room": "[\"https://app.notion.com/3dbb26df546781049283f6132cebe74a\"]", "Applies to": null, "Applied by": "Operating System", "date:Raised:start": "2026-09-14", "date:Ruled:start": "2026-09-14"},
-    {"url": "https://app.notion.com/3dbb26df54678180a9d9ecb0103c72af", "Item": "Nineteen of thirty-eight rooms have no usable Notion home. Which ones get one?", "Type": "Decision", "State": "Adjudicated", "Room": "[\"https://app.notion.com/3dbb26df546781049283f6132cebe74a\"]", "Applies to": null, "Applied by": null, "date:Raised:start": "2026-09-14", "date:Ruled:start": "2026-09-14"},
-    {"url": "https://app.notion.com/3dbb26df546781999c46ef0f045ffae2", "Item": "Transition Plan and Test Run Space share one Notion home. One room or two?", "Type": "Decision", "State": "Adjudicated", "Room": "[\"https://app.notion.com/3dbb26df546781058419fbfa2e57ff95\"]", "Applies to": null, "Applied by": null, "date:Raised:start": "2026-09-14", "date:Ruled:start": "2026-09-14"},
-    {"url": "https://app.notion.com/3dbb26df546781ad8312ce1e8338b888", "Item": "The LinkedIn room is blocked on a prerequisite that Expert Practice already resolved.", "Type": "Open question", "State": "Adjudicated", "Room": "[\"https://app.notion.com/3dbb26df546781d792bbc8e45b335a2d\"]", "Applies to": null, "Applied by": null, "date:Raised:start": "2026-09-14", "date:Ruled:start": "2026-09-14"},
-    {"url": "https://app.notion.com/3dbb26df546781d38c25f2e67c2f6b59", "Item": "Alkaline and Ember: is Alkaline a rename or a codename, and is Phil Levinson the CEO?", "Type": "Decision", "State": "Adjudicated", "Room": "[\"https://app.notion.com/3dbb26df5467815aae7df8e14ea8434e\"]", "Applies to": "[\"https://app.notion.com/3dbb26df5467814db539f4353132b705\",\"https://app.notion.com/3dbb26df5467815aae7df8e14ea8434e\",\"https://app.notion.com/3dbb26df546781058419fbfa2e57ff95\"]", "Applied by": null, "date:Raised:start": "2026-09-14", "date:Ruled:start": "2026-09-14"},
-    {"url": "https://app.notion.com/3dbb26df546781ecb456ce2832d12228", "Item": "The Atlas capture-sweep fix has a live brief in Notion and Execution never ran.", "Type": "Open question", "State": "Returned", "Room": "[\"https://app.notion.com/3dbb26df546781049283f6132cebe74a\"]", "Applies to": null, "Applied by": "Operating System", "date:Raised:start": "2026-09-14", "date:Ruled:start": "2026-09-14"}
-  ]
+ "data_source_id": "9094f21d-feca-46b3-a8c8-24ab27048fd5",
+ "title": "The Clipboard",
+ "schema": {
+  "Applied by": {
+   "type": "text"
+  },
+  "Applies to": {
+   "type": "relation",
+   "target": "bb434a7e-858d-47c6-9e66-f58817f5b3f8"
+  },
+  "Choices": {
+   "type": "text"
+  },
+  "Item": {
+   "type": "title"
+  },
+  "Nathan call": {
+   "type": "text"
+  },
+  "Options given": {
+   "type": "text"
+  },
+  "Raised": {
+   "type": "date"
+  },
+  "Room": {
+   "type": "relation",
+   "target": "bb434a7e-858d-47c6-9e66-f58817f5b3f8"
+  },
+  "Ruled": {
+   "type": "date"
+  },
+  "Source": {
+   "type": "url"
+  },
+  "State": {
+   "type": "select",
+   "options": [
+    "Open",
+    "Adjudicated",
+    "Returned",
+    "Dropped"
+   ]
+  },
+  "Task": {
+   "type": "url"
+  },
+  "Type": {
+   "type": "select",
+   "options": [
+    "Decision",
+    "Open question",
+    "Finding",
+    "Deliverable"
+   ]
+  }
+ },
+ "columns": [
+  "url",
+  "Item",
+  "Type",
+  "State",
+  "Room",
+  "Applies to",
+  "Applied by",
+  "date:Raised:start",
+  "date:Ruled:start"
+ ],
+ "rows": [
+  {
+   "url": "https://app.notion.com/3dbb26df546781a985a7c3397cbae94b",
+   "Item": "Last filed is empty on all 39 register rows, including on the day six rulings were provably applied. The collector's staleness check has never had data to run on.",
+   "Type": "Finding",
+   "State": "Open",
+   "Room": "[\"https://app.notion.com/3dbb26df546781049283f6132cebe74a\"]",
+   "Applies to": null,
+   "Applied by": null,
+   "date:Raised:start": "2026-09-14",
+   "date:Ruled:start": null
+  },
+  {
+   "url": "https://app.notion.com/3dbb26df5467815e902de3148c5374aa",
+   "Item": "Two unlogged credit bursts since the notebook's 9/9 update (9/10, ~478cr; 9/13-14, ~202cr incl. a never-before-seen tool, GPT Image 2.5 Flare) plus a missing 9/10 daily check: did real session work happen that never reached Context or Notion?",
+   "Type": "Open question",
+   "State": "Open",
+   "Room": "[\"https://app.notion.com/3dbb26df54678170bcd4ec989e39d0bd\"]",
+   "Applies to": "[\"https://app.notion.com/3dbb26df54678170bcd4ec989e39d0bd\"]",
+   "Applied by": null,
+   "date:Raised:start": "2026-09-14",
+   "date:Ruled:start": null
+  },
+  {
+   "url": "https://app.notion.com/3dbb26df54678125a44cfd8ead1ef39f",
+   "Item": "Round One closed at zero with no verified or sent contacts across its whole window. How does the verdict get signed?",
+   "Type": "Decision",
+   "State": "Adjudicated",
+   "Room": "[\"https://app.notion.com/3dbb26df54678175b1c4ca53a965c0bb\"]",
+   "Applies to": "[\"https://app.notion.com/3dbb26df54678175b1c4ca53a965c0bb\"]",
+   "Applied by": null,
+   "date:Raised:start": "2026-09-14",
+   "date:Ruled:start": "2026-09-14"
+  },
+  {
+   "url": "https://app.notion.com/3dbb26df54678152bf4ef9c8ec90351e",
+   "Item": "Three drafted Jeremiah notes are sitting unsent, one time-boxed to this week. Send, hold, or consolidate?",
+   "Type": "Decision",
+   "State": "Adjudicated",
+   "Room": "[\"https://app.notion.com/3dbb26df54678175b1c4ca53a965c0bb\"]",
+   "Applies to": "[\"https://app.notion.com/3dbb26df54678175b1c4ca53a965c0bb\"]",
+   "Applied by": null,
+   "date:Raised:start": "2026-09-14",
+   "date:Ruled:start": "2026-09-14"
+  },
+  {
+   "url": "https://app.notion.com/3dbb26df546781b9a288cb4d70dda7cb",
+   "Item": "The Alkaline ruling went against its own recommendation, so the room that now holds the wrong record is not the room the row points at.",
+   "Type": "Finding",
+   "State": "Returned",
+   "Room": "[\"https://app.notion.com/3dbb26df546781049283f6132cebe74a\"]",
+   "Applies to": null,
+   "Applied by": "Operating System",
+   "date:Raised:start": "2026-09-14",
+   "date:Ruled:start": "2026-09-14"
+  },
+  {
+   "url": "https://app.notion.com/3dbb26df546781e89adffbb44c4fa1cc",
+   "Item": "Three rooms point at one Notion page: Sightbox 4.0 Transition Plan. Which of them actually owns it?",
+   "Type": "Decision",
+   "State": "Adjudicated",
+   "Room": "[\"https://app.notion.com/3dbb26df546781049283f6132cebe74a\"]",
+   "Applies to": "[\"https://app.notion.com/3dbb26df546781058419fbfa2e57ff95\"]",
+   "Applied by": null,
+   "date:Raised:start": "2026-09-14",
+   "date:Ruled:start": "2026-09-14"
+  },
+  {
+   "url": "https://app.notion.com/3dbb26df5467816bb164c2e135a77fc7",
+   "Item": "Eleven task databases have no room, and two more belong to rooms that share a home. Where does that work live?",
+   "Type": "Decision",
+   "State": "Adjudicated",
+   "Room": "[\"https://app.notion.com/3dbb26df546781049283f6132cebe74a\"]",
+   "Applies to": "[\"https://app.notion.com/3dbb26df546781049283f6132cebe74a\"]",
+   "Applied by": null,
+   "date:Raised:start": "2026-09-14",
+   "date:Ruled:start": "2026-09-14"
+  },
+  {
+   "url": "https://app.notion.com/3dbb26df54678146bc23c888a0f372a4",
+   "Item": "OLG Robotics Tasks holds only robotics work but carries a household schema it inherited. Clean it or leave it?",
+   "Type": "Decision",
+   "State": "Dropped",
+   "Room": "[\"https://app.notion.com/3dbb26df546781049283f6132cebe74a\"]",
+   "Applies to": "[\"https://app.notion.com/3dbb26df546781d3a7caffeb9e29f348\"]",
+   "Applied by": null,
+   "date:Raised:start": "2026-09-14",
+   "date:Ruled:start": "2026-09-14"
+  },
+  {
+   "url": "https://app.notion.com/3dbb26df5467812aaf9beecade389485",
+   "Item": "30 of 38 rooms have no clipboard, so the block tells them to write to a log that does not exist.",
+   "Type": "Decision",
+   "State": "Returned",
+   "Room": "[\"https://app.notion.com/3dbb26df546781049283f6132cebe74a\"]",
+   "Applies to": null,
+   "Applied by": "Operating System",
+   "date:Raised:start": "2026-09-14",
+   "date:Ruled:start": "2026-09-14"
+  },
+  {
+   "url": "https://app.notion.com/3dbb26df546781f0a74ed555a22c3b9c",
+   "Item": "Two Room Register homes are invalid addresses. The homeless count is 19, not 14 and not 12.",
+   "Type": "Finding",
+   "State": "Returned",
+   "Room": "[\"https://app.notion.com/3dbb26df546781049283f6132cebe74a\"]",
+   "Applies to": null,
+   "Applied by": "Operating System",
+   "date:Raised:start": "2026-09-14",
+   "date:Ruled:start": "2026-09-14"
+  },
+  {
+   "url": "https://app.notion.com/3dbb26df546781199377fcc30ee1c6f0",
+   "Item": "Is Suzette your partner or your sister? Memory records both.",
+   "Type": "Decision",
+   "State": "Adjudicated",
+   "Room": "[\"https://app.notion.com/3dbb26df546781548b37ef2f2df3f73a\"]",
+   "Applies to": "[\"https://app.notion.com/3dbb26df546781548b37ef2f2df3f73a\"]",
+   "Applied by": null,
+   "date:Raised:start": "2026-09-14",
+   "date:Ruled:start": "2026-09-14"
+  },
+  {
+   "url": "https://app.notion.com/3dbb26df5467811ab1e3fabd5a1277b9",
+   "Item": "Close the Sightbox Executive Assistant room? It was set up and never run.",
+   "Type": "Decision",
+   "State": "Adjudicated",
+   "Room": "[\"https://app.notion.com/3dbb26df5467811a8b1dfa9bb0839004\"]",
+   "Applies to": null,
+   "Applied by": null,
+   "date:Raised:start": "2026-09-14",
+   "date:Ruled:start": "2026-09-14"
+  },
+  {
+   "url": "https://app.notion.com/3dbb26df54678160954dde2a319a0bcc",
+   "Item": "Did the 4 September and 6 September reviews happen?",
+   "Type": "Open question",
+   "State": "Returned",
+   "Room": "[\"https://app.notion.com/3dbb26df546781049283f6132cebe74a\"]",
+   "Applies to": null,
+   "Applied by": "Operating System",
+   "date:Raised:start": "2026-09-14",
+   "date:Ruled:start": "2026-09-14"
+  },
+  {
+   "url": "https://app.notion.com/3dbb26df54678162b240c173a631a2d3",
+   "Item": "Magnitude: one room still holds The Command Center as the live creative direction after Rami killed it.",
+   "Type": "Decision",
+   "State": "Adjudicated",
+   "Room": "[\"https://app.notion.com/3dbb26df54678164a406de2cb4ec3816\"]",
+   "Applies to": "[\"https://app.notion.com/3dbb26df5467814db539f4353132b705\"]",
+   "Applied by": null,
+   "date:Raised:start": "2026-09-14",
+   "date:Ruled:start": "2026-09-14"
+  },
+  {
+   "url": "https://app.notion.com/3dbb26df54678163aa87dfff3c37ecf5",
+   "Item": "Flux is described three incompatible ways across three rooms. Which is canon?",
+   "Type": "Decision",
+   "State": "Adjudicated",
+   "Room": "[\"https://app.notion.com/3dbb26df546781f49299c94965ca8ba1\"]",
+   "Applies to": "[\"https://app.notion.com/3dbb26df5467814db539f4353132b705\",\"https://app.notion.com/3dbb26df546781f49299c94965ca8ba1\",\"https://app.notion.com/3dbb26df546781279e11e4350e0f1cb7\"]",
+   "Applied by": null,
+   "date:Raised:start": "2026-09-14",
+   "date:Ruled:start": "2026-09-14"
+  },
+  {
+   "url": "https://app.notion.com/3dbb26df5467816dbab4e8952b772f17",
+   "Item": "SightOps still cannot write to Notion. Two weeks, one command.",
+   "Type": "Open question",
+   "State": "Returned",
+   "Room": "[\"https://app.notion.com/3dbb26df546781049283f6132cebe74a\"]",
+   "Applies to": null,
+   "Applied by": "Operating System",
+   "date:Raised:start": "2026-09-14",
+   "date:Ruled:start": "2026-09-14"
+  },
+  {
+   "url": "https://app.notion.com/3dbb26df54678180a9d9ecb0103c72af",
+   "Item": "Nineteen of thirty-eight rooms have no usable Notion home. Which ones get one?",
+   "Type": "Decision",
+   "State": "Adjudicated",
+   "Room": "[\"https://app.notion.com/3dbb26df546781049283f6132cebe74a\"]",
+   "Applies to": null,
+   "Applied by": null,
+   "date:Raised:start": "2026-09-14",
+   "date:Ruled:start": "2026-09-14"
+  },
+  {
+   "url": "https://app.notion.com/3dbb26df546781999c46ef0f045ffae2",
+   "Item": "Transition Plan and Test Run Space share one Notion home. One room or two?",
+   "Type": "Decision",
+   "State": "Adjudicated",
+   "Room": "[\"https://app.notion.com/3dbb26df546781058419fbfa2e57ff95\"]",
+   "Applies to": null,
+   "Applied by": null,
+   "date:Raised:start": "2026-09-14",
+   "date:Ruled:start": "2026-09-14"
+  },
+  {
+   "url": "https://app.notion.com/3dbb26df546781ad8312ce1e8338b888",
+   "Item": "The LinkedIn room is blocked on a prerequisite that Expert Practice already resolved.",
+   "Type": "Open question",
+   "State": "Adjudicated",
+   "Room": "[\"https://app.notion.com/3dbb26df546781d792bbc8e45b335a2d\"]",
+   "Applies to": null,
+   "Applied by": null,
+   "date:Raised:start": "2026-09-14",
+   "date:Ruled:start": "2026-09-14"
+  },
+  {
+   "url": "https://app.notion.com/3dbb26df546781d38c25f2e67c2f6b59",
+   "Item": "Alkaline and Ember: is Alkaline a rename or a codename, and is Phil Levinson the CEO?",
+   "Type": "Decision",
+   "State": "Adjudicated",
+   "Room": "[\"https://app.notion.com/3dbb26df5467815aae7df8e14ea8434e\"]",
+   "Applies to": "[\"https://app.notion.com/3dbb26df5467814db539f4353132b705\",\"https://app.notion.com/3dbb26df5467815aae7df8e14ea8434e\",\"https://app.notion.com/3dbb26df546781058419fbfa2e57ff95\"]",
+   "Applied by": null,
+   "date:Raised:start": "2026-09-14",
+   "date:Ruled:start": "2026-09-14"
+  },
+  {
+   "url": "https://app.notion.com/3dbb26df546781ecb456ce2832d12228",
+   "Item": "The Atlas capture-sweep fix has a live brief in Notion and Execution never ran.",
+   "Type": "Open question",
+   "State": "Returned",
+   "Room": "[\"https://app.notion.com/3dbb26df546781049283f6132cebe74a\"]",
+   "Applies to": null,
+   "Applied by": "Operating System",
+   "date:Raised:start": "2026-09-14",
+   "date:Ruled:start": "2026-09-14"
+  }
+ ]
 }

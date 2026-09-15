@@ -4,6 +4,8 @@ from __future__ import annotations
 from datetime import date
 from typing import Any
 
+from . import clipboard as cb
+from . import config as cfg
 from . import dirt
 from . import schema as sch
 from .people import People
@@ -26,6 +28,14 @@ class Desk:
         self.findings: list[dict[str, Any]] = []
         self.today = _capture_date(snapshot.get("captured_at"))
         self._assemble()
+        # The Clipboard join: every row, decoded, and the task each one points at.
+        self.clipboard_schema, self.clipboard_schema_source = cb.clipboard_schema(snapshot)
+        self.clipboard_items = cb.build_items(snapshot, self.clipboard_schema, self.tasks, self.room_by_id)
+        self.clipboard_by_id: dict[str, dict[str, Any]] = {i["id"]: i for i in self.clipboard_items}
+        self.decisions_by_task: dict[str, list[str]] = {}
+        for item in self.clipboard_items:
+            if item["task_known"]:
+                self.decisions_by_task.setdefault(item["task_id"], []).append(item["id"])
 
     # ---- assembly ---------------------------------------------------------
     def _assemble(self) -> None:
@@ -55,6 +65,9 @@ class Desk:
         return self.room_by_id.get(task.room_id) if task else None
 
     def schema_for_room(self, room_id: str) -> dict[str, dict]:
+        """A room's database schema. The Clipboard is addressed by its own id, like a room."""
+        if room_id == cfg.CLIPBOARD_ID:
+            return self.clipboard_schema
         room = self.room_by_id[room_id]
         return self.snapshot["sources"][room.tasks_source]["schema"]
 
@@ -77,6 +90,7 @@ class Desk:
             "tasks_url": room.tasks_url,
             "tasks_source": room.tasks_source,
             "wired": room.wired,
+            "clipboard_ids": [i["id"] for i in self.clipboard_items if room.id in i["room_ids"] or i["task_room_id"] == room.id],
         }
         if room.id in self.tasks_by_room:
             source = self.snapshot["sources"][room.tasks_source]
@@ -107,30 +121,43 @@ class Desk:
         return view
 
     def clipboard_view(self) -> dict[str, Any]:
-        rows = (self.snapshot.get("clipboard") or {}).get("rows") or []
-        items = []
-        for row in rows:
-            room_ids = [page_id_from_url(u) for u in _list(row.get("Room"))]
-            applies = [page_id_from_url(u) for u in _list(row.get("Applies to"))]
-            items.append({
-                "id": page_id_from_url(row.get("url")),
-                "item": row.get("Item"),
-                "type": row.get("Type"),
-                "state": row.get("State"),
-                "room_ids": room_ids,
-                "room_names": [self.room_by_id[r].name for r in room_ids if r in self.room_by_id],
-                "applies_to": [self.room_by_id[r].name for r in applies if r in self.room_by_id],
-                "applied_by": row.get("Applied by"),
-                "raised": row.get("date:Raised:start"),
-                "ruled": row.get("date:Ruled:start"),
-                "task_id": None,
-            })
+        items = [{k: v for k, v in item.items() if k != "props"} for item in self.clipboard_items]
+        attached = [i for i in items if i["task_known"]]
+        dangling = [i["id"] for i in items if i["task_url"] and not i["task_known"]]
+        if not items:
+            note = "The Clipboard is empty."
+        elif not attached:
+            note = "No Clipboard row points at a task yet. A decision at the gate is filed as one, and a room files one by putting the task's address in the Task property."
+        else:
+            note = f"{len(attached)} of {len(items)} rows point at a task the desk holds."
+        if dangling:
+            note += f" {len(dangling)} point at a row the desk does not hold."
+        if self.clipboard_schema_source == "known":
+            note += " The Clipboard's schema here is the desk's own record of 15 September; refresh the snapshot to read it live."
         return {
-            "open": sum(1 for i in items if i["state"] == "Open"),
-            "adjudicated": sum(1 for i in items if i["state"] == "Adjudicated"),
+            "title": (self.snapshot.get("clipboard") or {}).get("title") or cb.TITLE,
+            "data_source_id": cfg.CLIPBOARD_ID,
+            "open": sum(1 for i in items if i["state"] == cb.OPEN),
+            "adjudicated": sum(1 for i in items if i["state"] == cb.ADJUDICATED),
+            "returned": sum(1 for i in items if i["state"] == cb.RETURNED),
+            "dropped": sum(1 for i in items if i["state"] == cb.DROPPED),
+            "attached": len(attached),
+            "open_attached": sum(1 for i in attached if i["state"] == cb.OPEN),
+            "dangling": dangling,
+            "by_task": {k: list(v) for k, v in self.decisions_by_task.items()},
             "items": items,
-            "note": "No Clipboard row points at a task yet. The Clipboard to Task relation is build order 5.",
+            "schema": self.clipboard_schema,
+            "schema_source": self.clipboard_schema_source,
+            "note": note,
         }
+
+    def _task_dicts(self) -> dict[str, dict[str, Any]]:
+        out: dict[str, dict[str, Any]] = {}
+        for task in self.tasks.values():
+            data = task.as_dict()
+            data["decision_ids"] = list(self.decisions_by_task.get(task.id, []))
+            out[task.id] = data
+        return out
 
     def as_dict(self) -> dict[str, Any]:
         area_order = list((self.snapshot["register"]["schema"].get("Area") or {}).get("options") or [])
@@ -146,7 +173,7 @@ class Desk:
             },
             "areas": areas,
             "rooms": {r.id: self.room_view(r) for r in self.rooms},
-            "tasks": {t.id: t.as_dict() for t in self.tasks.values()},
+            "tasks": self._task_dicts(),
             "people": self.people.options(),
             "unresolved_people": sorted(self.people.unresolved.keys()),
             "findings": self.findings,

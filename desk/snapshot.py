@@ -2,7 +2,7 @@
 
 A snapshot is a plain dict:
   captured_at, source_kind, users, register {data_source_id, schema, rows},
-  clipboard {data_source_id, rows}, sources {data_source_id: {title, schema, rows}}
+  clipboard {data_source_id, title, schema, rows}, sources {data_source_id: {title, schema, rows}}
 """
 from __future__ import annotations
 
@@ -28,6 +28,7 @@ def load_fixture(directory: Path | str = cfg.FIXTURE_DIR) -> dict[str, Any]:
         source["schema"] = reduce_schema(source["schema"])
         sources[source["data_source_id"].lower()] = source
     register["schema"] = reduce_schema(register.get("schema") or {})
+    clipboard["schema"] = reduce_schema(clipboard.get("schema") or {})
     return {
         "captured_at": meta.get("captured_at"),
         "captured_via": meta.get("captured_via"),
@@ -47,6 +48,8 @@ def load_snapshot(path: Path | str = cfg.SNAPSHOT_PATH) -> dict[str, Any] | None
     data = json.loads(path.read_text(encoding="utf-8"))
     for source in data.get("sources", {}).values():
         source["schema"] = reduce_schema(source.get("schema") or {})
+    if data.get("clipboard"):
+        data["clipboard"]["schema"] = reduce_schema(data["clipboard"].get("schema") or {})
     data.setdefault("source_kind", "live")
     return data
 
@@ -68,7 +71,8 @@ def build_snapshot(client: Any, register_id: str = cfg.ROOM_REGISTER_ID, clipboa
     """
     reg_title, reg_schema = client.fetch_schema(register_id)
     register = {"data_source_id": register_id, "title": reg_title, "schema": reduce_schema(reg_schema), "rows": client.query_rows(register_id)}
-    clipboard = {"data_source_id": clipboard_id, "rows": client.query_rows(clipboard_id)}
+    cb_title, cb_schema = client.fetch_schema(clipboard_id)
+    clipboard = {"data_source_id": clipboard_id, "title": cb_title, "schema": reduce_schema(cb_schema), "rows": client.query_rows(clipboard_id)}
     users = [u for u in client.list_users() if u.get("type", "person") == "person"]
     sources: dict[str, Any] = {}
     for room in wired_rooms(load_rooms(register["rows"])):
@@ -86,10 +90,20 @@ def build_snapshot(client: Any, register_id: str = cfg.ROOM_REGISTER_ID, clipboa
     }
 
 
+def table(snapshot: dict[str, Any], ds_id: str) -> dict[str, Any] | None:
+    """The part of a snapshot that holds a data source's rows: a room's database, the Clipboard or the register."""
+    key = ds_id.lower()
+    if key == cfg.CLIPBOARD_ID:
+        return snapshot.get("clipboard")
+    if key == cfg.ROOM_REGISTER_ID:
+        return snapshot.get("register")
+    return snapshot.get("sources", {}).get(key)
+
+
 def find_row(snapshot: dict[str, Any], ds_id: str, page_id: str) -> dict[str, Any] | None:
     from .values import page_id_from_url
 
-    source = snapshot.get("sources", {}).get(ds_id.lower())
+    source = table(snapshot, ds_id)
     if not source:
         return None
     for row in source.get("rows") or []:
@@ -115,7 +129,7 @@ def patch_row(snapshot: dict[str, Any], ds_id: str, page_id: str, prop: str, pro
 
 
 def add_row(snapshot: dict[str, Any], ds_id: str, page_id: str, url: str, title_prop: str, title: str | None) -> dict[str, Any] | None:
-    source = snapshot.get("sources", {}).get(ds_id.lower())
+    source = table(snapshot, ds_id)
     if not source:
         return None
     row = {"url": url, "createdTime": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%SZ"), title_prop: title}

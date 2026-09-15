@@ -14,6 +14,7 @@ Home of the Desk Harness (`desk/`), a Notion and Claude harness over the rooms o
 - Write back only a database's own vocabulary. Normalised status is a display concern.
 - Known dirt in the data is surfaced, never cleaned without a ruling.
 - Per-room configuration lives on the Room Register (Grouping field, Status vocabulary, Owner field), not in code.
+- The Clipboard is Nathan's decision inbox. A decision is a Clipboard row that points at a task through its Task property, a URL. The desk files gate decisions there and rules on open rows from there, through the same queue as every other write.
 
 ## Run
 
@@ -24,7 +25,7 @@ python3 -m unittest discover -s tests -v
 
 ## Layout
 
-- `desk/` — the harness: registry, tasks, normalise, dirt, changes (the queue and payload), notion/ (MCP client, OAuth, fixture client), service, server
+- `desk/` — the harness: registry, tasks, normalise, dirt, clipboard (the join), changes (the queue and payload), notion/ (MCP client, OAuth, fixture client), service, server
 - `app/desk.html` — the four-column surface
 - `fixtures/notion-2026-09-14/` — the real data as read through Notion MCP on 14 September 2026
 - `tests/` — unit tests for both the desk and the retired Kanban

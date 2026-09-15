@@ -32,6 +32,10 @@ Writes go through Notion MCP only, never `api.notion.com`. The desk gets its own
 
 Nine rooms have a Tasks source. Their grouping field, status vocabulary and owner field are on the Room Register, in three text fields added on 14 September 2026. The desk reads its configuration from there and checks it against each database's real schema; a mismatch is surfaced as a finding, never hidden, and the database's own option list is what gets written.
 
+## The Clipboard join
+
+A decision is a Clipboard row that points at a task. The Clipboard's Task property, a URL added on 15 September 2026, carries the address of the task page; a relation could not, because the tasks live in nine databases. The desk shows every row on its room and every pointed row on its task, counts the open pointed rows in the cross-room queue, and lets a ruling be queued from the desk through the same write path as an edit. When a proposal is decided at the gate, the decision is filed as a Clipboard row, Adjudicated, pointing at the task, carrying the options that were put and the call that was made, unless filing is declined for that decision.
+
 ## Known dirt
 
 The desk surfaces what it finds and cleans nothing: parents closed with open children, owner ids that resolve to no workspace person, rows with no title or no status, rows outside a room's grouping on an older shape, a row that names another room's database, a room marked Live with every row terminal. Each is a signal for a ruling.

@@ -111,6 +111,7 @@ input,select,textarea{font:inherit;color:inherit}
 .tab.sel{background:var(--surface);color:var(--ink);font-weight:600;box-shadow:inset 0 2px 0 var(--accent)}
 .tab .ct{font-family:var(--mono);font-size:10px;color:var(--faint)}
 .tab.empty{color:var(--dead)}
+.col.detail .tab{padding:7px 6px;font-size:11px}
 .tab .dot{width:6px;height:6px;border-radius:50%;background:var(--signal);flex:none}
 
 .grp{padding:8px 16px 4px;font-family:var(--mono);font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--faint);display:flex;gap:8px;background:var(--surface);position:sticky;top:0;border-bottom:1px solid var(--hair)}
@@ -159,6 +160,15 @@ select.quickstat:hover{border-color:var(--accent);color:var(--accent)}
 .find li{margin-bottom:2px}
 .find li b{color:var(--ink);font-weight:600;cursor:pointer}
 .find li b:hover{color:var(--accent)}
+.find.clip .meta{font-family:var(--mono);font-size:10.5px;color:var(--faint);margin-top:5px;line-height:1.5}
+.find.clip .meta b{color:var(--ink);font-weight:600}
+.find.clip .meta b[data-task]{cursor:pointer}
+.find.clip .meta b[data-task]:hover{color:var(--accent)}
+.find.clip .meta .dangling{color:var(--hot)}
+.find.clip .pjson{margin-top:6px;border:1px solid var(--hair)}
+.find.clip .propose{margin-top:8px;padding:10px 12px;border:1px solid var(--hair);border-radius:3px}
+.gate .file{display:block;font-size:11px;color:var(--muted);margin:8px 0 2px;cursor:pointer}
+.gate .file input{vertical-align:-1px;margin-right:4px}
 
 .props{padding:10px 16px;display:flex;flex-direction:column;gap:2px}
 .prow{display:grid;grid-template-columns:132px minmax(0,1fr);gap:12px;align-items:start;padding:4px 6px;border-radius:3px}
@@ -279,7 +289,7 @@ const AGENT = 'agent';
 let D = null;            // the desk, as served by /api/desk
 let PAY = null;          // the exact payload, as served by /api/payload
 const S = {room:null, task:null, sub:null, roomTab:'tasks', taskTab:'props', subTab:'props', agentTab:'feed', showPayload:false, nav:'rooms'};
-const U = {editing:false, editValue:null, responding:false};
+const U = {editing:false, editValue:null, responding:false, file:true};
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -293,10 +303,11 @@ function toast(msg, ms){ const el=$('toast'); el.textContent=msg; el.classList.t
 function fmtDate(d){ if(!d) return ''; const s = typeof d === 'string' ? d : d.start; if(!s) return ''; const m = s.slice(0,10).split('-'); if(m.length!==3) return s; const mon=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+m[1]-1]; return `${+m[2]} ${mon} ${m[0]}` + (s.length>10 ? ' ' + s.slice(11,16) : ''); }
 function isOverdue(t){ return t.due && t.due.start && ['todo','doing','blocked','review'].includes(t.state) && t.due.start.slice(0,10) < D.source.today; }
 function stateLabel(t){ return t.status_raw == null ? 'no status' : t.status_raw; }
-function pendingOf(id){ return (task(id) && task(id).pending) || []; }
+function pendingOf(id){ const t = task(id); if(t) return t.pending || []; const i = clip(id); return (i && i.pending) || []; }
 function proposalsOf(id){ return pendingOf(id).filter(c => c.state === 'proposed'); }
 function queuedOf(id){ return pendingOf(id).filter(c => c.state !== 'proposed'); }
-function showVal(v){ if(v == null || v === '') return '(empty)'; if(Array.isArray(v)) return v.length ? v.map(x => personName(x) || x).join(', ') : '(empty)'; if(typeof v === 'object') return (v.start||'') + (v.end ? ' → ' + v.end : ''); return String(v); }
+function nameOf(x){ const k = String(x).replace(/-/g,''); if(D.rooms[k]) return D.rooms[k].name; if(D.tasks[k]) return D.tasks[k].title || '(untitled row)'; return personName(x) || x; }
+function showVal(v){ if(v == null || v === '') return '(empty)'; if(Array.isArray(v)) return v.length ? v.map(nameOf).join(', ') : '(empty)'; if(typeof v === 'object') return (v.start||'') + (v.end ? ' → ' + v.end : ''); return String(v); }
 function personName(id){ const p = (D.people||[]).find(p => p.id.replace(/-/g,'') === String(id).replace(/-/g,'')); if(p) return p.name; if(/^[0-9a-f]{32}$/.test(String(id).replace(/-/g,''))) return 'unresolved user ' + String(id).replace(/-/g,'').slice(0,8); return null; }
 
 /* ---------- API ---------- */
@@ -381,7 +392,7 @@ function payloadPanel(){
     const list = byTask[tid];
     const call = (PAY && PAY.calls || []).find(c => c.task_id === tid);
     const rm = room(list[0].room_id);
-    h += '<div class="pcall"><div class="pfn">'+(call ? call.tool : 'notion-update-page')+'(<span class="pid">'+esc(list[0].title||tid)+'</span>)<span class="rm">'+esc(rm ? rm.name : '')+'</span></div>';
+    h += '<div class="pcall"><div class="pfn">'+(call ? call.tool : 'notion-update-page')+'(<span class="pid">'+esc(list[0].title||tid)+'</span>)<span class="rm">'+esc((call && call.room) || (rm ? rm.name : ''))+'</span></div>';
     list.forEach(ch => {
       h += '<div class="pline"><span class="pby '+ch.by+'">'+(ch.by===PERSON?'you':'agent')+'</span>'+
         '<span class="pk">'+esc(ch.property)+'</span>'+
@@ -398,10 +409,11 @@ function payloadPanel(){
 }
 
 function navCol(){
-  const props = D.queue.summary.proposed, cb = D.clipboard;
+  const props = D.queue.summary.proposed, cb = D.clipboard, openHere = cb.open_attached || 0, waiting = props + openHere;
   let h = '<nav class="col nav">';
-  h += '<button class="qbtn'+(props?'':' quiet')+(S.nav==='queue'?' sel':'')+'" data-nav="queue"><span class="r1"><span class="t">Waiting on you</span><span class="n">'+props+'</span></span>'+
-    '<span class="r2">'+(props ? props+' agent proposal'+(props>1?'s':'')+' at the gate' : 'no agent proposal at the gate')+' · Clipboard: '+cb.open+' open, '+cb.adjudicated+' adjudicated, none attached to a task</span></button>';
+  h += '<button class="qbtn'+(waiting?'':' quiet')+(S.nav==='queue'?' sel':'')+'" data-nav="queue"><span class="r1"><span class="t">Waiting on you</span><span class="n">'+waiting+'</span></span>'+
+    '<span class="r2">'+(props ? props+' agent proposal'+(props>1?'s':'')+' at the gate' : 'no agent proposal at the gate')+' · Clipboard: '+cb.open+' open, '+cb.adjudicated+' adjudicated, '+
+    (cb.attached ? cb.attached+' attached to a task'+(openHere ? ', '+openHere+' of them open' : '') : 'none attached to a task')+'</span></button>';
   h += '<div class="navsec">Spaces</div><div class="colscroll">';
   D.areas.forEach(area => {
     h += '<div class="spacerow">'+esc(area.name)+'</div>';
@@ -440,6 +452,7 @@ function roomCol(){
   h += tabRow('room', [
     {id:'tasks', label:'Tasks', n:r.top_task_ids.length, dot: r.task_ids.some(id => proposalsOf(id).length)},
     {id:'schema', label:'Schema', n:Object.keys(r.schema).length},
+    {id:'clipboard', label:'Clipboard', n:(r.clipboard_ids||[]).length, dot:(r.clipboard_ids||[]).some(id => { const i = clip(id); return !!(i && i.state==='Open'); })},
     {id:'dirt', label:'Dirt', n:dirt.length}
   ], S.roomTab);
   h += '<div class="colscroll">';
@@ -450,6 +463,10 @@ function roomCol(){
       h += g.task_ids.map(id => taskRow(id, S.task===id)).join('');
     });
     h += '<button class="newrow" data-act="newtask">+ New task in '+esc(r.name)+'</button>';
+  } else if(S.roomTab==='clipboard'){
+    const ids = r.clipboard_ids||[];
+    h += '<div class="note">Rows on the Clipboard raised by this room or pointing at one of its tasks. A ruling queues through the same write path as an edit.</div>';
+    h += ids.length ? ids.map(id => clipHTML(clip(id), true)).join('') : '<div class="empty">Nothing on the Clipboard for this room.</div>';
   } else if(S.roomTab==='schema'){
     h += '<div class="note'+(cfg.source==='register'?'':' gap')+'">'+(cfg.source==='register' ? 'Configuration read from the Room Register.' : 'Configuration partly derived from the schema. The Room Register should carry it.')+
       (cfg.warnings.length ? '<br>'+cfg.warnings.map(esc).join('<br>') : '')+'</div>';
@@ -477,6 +494,39 @@ function roomCol(){
 function findingHTML(f){
   return '<div class="find"><div class="fr"><span>'+esc(f.rule)+'</span><span class="lv">'+f.count+' · '+esc(f.level)+'</span></div><div class="fn">'+esc(f.note)+'</div>'+
     (f.items.length ? '<ul>'+f.items.slice(0,40).map(i => '<li><b data-task="'+i.task_id+'">'+esc(i.title)+'</b>'+(i.detail?': '+esc(i.detail):'')+'</li>').join('')+(f.items.length>40?'<li>… and '+(f.items.length-40)+' more</li>':'')+'</ul>' : '')+'</div>';
+}
+
+function clip(id){ return (D.clipboard.items||[]).find(i => i.id===id); }
+function clipHTML(i, showTask){
+  if(!i) return '';
+  const open = i.state==='Open', real = i.url && !i.url.startsWith('local://');
+  let h = '<div class="find clip"><div class="fr"><span>'+esc(i.type||'row')+' · '+esc(i.state||'no state')+'</span><span class="lv">'+
+    (i.raised ? 'raised '+esc(fmtDate(i.raised)) : '')+(i.ruled ? (i.raised?' · ':'')+'ruled '+esc(fmtDate(i.ruled)) : '')+'</span></div>';
+  h += '<div class="fn">'+esc(i.item||'(untitled row)')+'</div>';
+  const meta = [];
+  if(i.room_names.length) meta.push('room: '+esc(i.room_names.join(', ')));
+  if(i.applies_to.length) meta.push('applies to: '+esc(i.applies_to.join(', ')));
+  if(showTask && i.task_known) meta.push('task: <b data-task="'+i.task_id+'">'+esc(i.task_title||'(untitled)')+'</b>');
+  else if(i.task_url && !i.task_known) meta.push('<span class="dangling">points at a row the desk does not hold</span>');
+  if(real) meta.push('<a href="'+attr(i.url)+'" target="_blank" rel="noopener">open in Notion ↗</a>');
+  else if(i.url) meta.push('queued, not yet in Notion');
+  if(meta.length) h += '<div class="meta">'+meta.join(' · ')+'</div>';
+  if(i.choices) h += '<pre class="pjson">'+esc(i.choices)+'</pre>';
+  if(i.call) h += '<div class="meta">call: <b>'+esc(i.call)+'</b></div>';
+  const pend = i.pending||[];
+  if(pend.length){
+    const states = Array.from(new Set(pend.map(c => c.state)));
+    h += '<div class="meta">'+(states.length===1 && states[0]==='queued' ? pend.length+' change'+(pend.length>1?'s':'')+' queued for Notion, not yet sent' : pend.length+' pending: '+pend.map(c => esc(c.property)+' → '+esc(showVal(c.to_value))+' ('+esc(c.state)+')').join(', '))+'</div>';
+  }
+  if(open && !pend.length && real) h += ruleForm(i);
+  return h + '</div>';
+}
+function ruleForm(i){
+  const states = ((((D.clipboard.schema||{}).State||{}).options) || ['Adjudicated','Dropped']).filter(s => s!=='Open');
+  return '<div class="propose rule"><span class="l">Rule on this item</span><div class="f">'+
+    '<select id="rl_state_'+i.id+'">'+states.map(s => '<option value="'+attr(s)+'"'+(s==='Adjudicated'?' selected':'')+'>'+esc(s)+'</option>').join('')+'</select>'+
+    '<input id="rl_call_'+i.id+'" placeholder="the call, in one line">'+
+    '</div><div class="verbs"><button class="btn pri" data-rule="'+i.id+'">Queue the ruling</button></div></div>';
 }
 
 function taskRow(id, sel){
@@ -555,6 +605,7 @@ function detailCol(id, kind, tabKey){
     {id:'props', label:'Properties', n:Object.keys(r.schema).length-1},
     {id:'children', label:r.children_property || 'Sub-items', n:t.child_ids.length},
     {id:'body', label:'Body', n:0},
+    {id:'decisions', label:'Decisions', n:(t.decision_ids||[]).length, dot:(t.decision_ids||[]).some(id => { const i = clip(id); return !!(i && i.state==='Open'); })},
     {id:'outcomes', label:'Outcomes', n:0}
   ], tab);
   h += '<div class="colscroll">';
@@ -564,6 +615,11 @@ function detailCol(id, kind, tabKey){
       : '<div class="empty">'+(r.parent_property ? 'No sub-items. '+esc(r.parent_property)+' and '+esc(r.children_property)+' exist in this database.' : 'This database has no parent and sub-item relation.')+'</div>';
   }
   else if(tab==='body'){ h += '<div class="note gap">Page bodies are not read yet. The task page opens in Notion from the pill above.</div>'; }
+  else if(tab==='decisions'){
+    const ids = t.decision_ids||[];
+    h += ids.length ? ids.map(id => clipHTML(clip(id), false)).join('')
+      : '<div class="note">No Clipboard row points at this task. A decision at the gate is filed here when you accept, reject or respond, and a row a room files with this task\'s address shows here too.</div>';
+  }
   else { h += '<div class="note gap">Outcomes is a new database per room, with a Level property. It does not exist yet, so nothing can be recorded here.</div>'; }
   return h + '</div></section>';
 }
@@ -600,6 +656,7 @@ function feedLine(c){
   if(c.state==='returned' && c.response) extra = ' · returned: “'+esc(c.response)+'”';
   if(c.state==='rejected' && c.response) extra = ' · rejected: “'+esc(c.response)+'”';
   if(c.result && c.result.error) extra = ' · '+esc(c.result.error);
+  if((c.history||[]).some(x => x.event==='filed')) extra += ' · filed on the Clipboard';
   return '<div class="ai"><span class="k '+who+'">'+who+'</span><span class="v">'+verb+' <code>'+esc(c.property)+'</code> '+esc(showVal(c.from_value))+' &rarr; <b>'+esc(showVal(c.to_value))+'</b>'+(c.note?' · '+esc(c.note):'')+extra+'<span class="st">'+esc(c.state)+(c.edited?' · edited':'')+'</span></span></div>';
 }
 
@@ -631,6 +688,8 @@ function gateHTML(t, c, n){
   h += '</div></div>';
   h += '<div class="respond'+(U.responding?' open':'')+'"><textarea id="rtext" placeholder="Tell the agent what to do instead. This goes back with the proposal."></textarea>'+
     '<div class="verbs"><button class="btn pri" data-gate="respond" data-id="'+c.id+'">Send back</button><button class="btn q" data-act="cancelrespond">Cancel</button></div></div>';
+  const addressed = !!(t.url && !t.url.startsWith('local://'));
+  h += '<label class="file"><input type="checkbox" id="gfile"'+(U.file===false?'':' checked')+(addressed?'':' disabled')+'> File the decision on the Clipboard, pointing at this task'+(addressed?'':' (this row has no Notion address yet)')+'</label>';
   h += '<div class="verbs"><button class="btn pri" data-gate="accept" data-id="'+c.id+'">'+(U.editing?'Accept with edits':'Accept')+'</button>'+
     '<button class="btn'+(U.editing?' on':'')+'" data-act="edit">'+(U.editing?'Editing':'Edit')+'</button>'+
     '<button class="btn" data-act="respond">Respond</button>'+
@@ -639,12 +698,14 @@ function gateHTML(t, c, n){
 }
 
 /* ---------- wiring ---------- */
-function resetGate(){ U.editing=false; U.editValue=null; U.responding=false; }
+function resetGate(){ U.editing=false; U.editValue=null; U.responding=false; U.file=true; }
 function wire(){
   document.querySelectorAll('[data-room]').forEach(b => b.onclick = () => { S.room=b.dataset.room; S.roomTab='tasks'; S.task=firstTask(S.room); S.sub=null; S.taskTab='props'; resetGate(); render(); });
   document.querySelectorAll('[data-nav]').forEach(b => b.onclick = () => {
     const pending = D.queue.changes.find(c => c.state==='proposed');
     if(pending){ const t = task(pending.task_id); if(t){ S.room=t.room_id; if(t.parent_id && task(t.parent_id)){ S.task=t.parent_id; S.sub=t.id; } else { S.task=t.id; S.sub=null; } resetGate(); render(); return; } }
+    const openItem = (D.clipboard.items||[]).find(i => i.state==='Open' && i.task_known);
+    if(openItem){ const t = task(openItem.task_id); if(t){ S.room=t.room_id; if(t.parent_id && task(t.parent_id)){ S.task=t.parent_id; S.sub=t.id; S.subTab='decisions'; } else { S.task=t.id; S.sub=null; S.taskTab='decisions'; } resetGate(); render(); return; } }
     S.showPayload = !S.showPayload; if(S.showPayload) api('GET','/api/payload').then(p => { PAY=p; render(); }); else render();
   });
   document.querySelectorAll('.row[data-task], .find b[data-task]').forEach(el => el.onclick = e => {
@@ -661,6 +722,11 @@ function wire(){
   document.querySelectorAll('[data-discard]').forEach(el => el.onclick = async () => { try{ await api('POST', '/api/changes/'+el.dataset.discard+'/discard', {}); await load(true); toast('Discarded'); }catch(err){ toast(err.message); } });
   document.querySelectorAll('[data-act]').forEach(b => b.onclick = () => act(b.dataset.act));
   document.querySelectorAll('[data-gate]').forEach(b => b.onclick = () => gate(b.dataset.gate, b.dataset.id));
+  document.querySelectorAll('[data-rule]').forEach(b => b.onclick = async () => {
+    const id = b.dataset.rule, call = (($('rl_call_'+id)||{}).value||'').trim(), state = ($('rl_state_'+id)||{}).value || 'Adjudicated';
+    try{ await api('POST','/api/clipboard/'+id+'/rule', {call, state}); await load(true); toast('Ruling queued through the same write path'); }catch(err){ toast(err.message); }
+  });
+  const gf = $('gfile'); if(gf) gf.onchange = e => { U.file = e.target.checked; };
   $('refresh').onclick = async () => { $('refresh').disabled = true; toast('Refreshing…'); try{ const r = await api('POST','/api/refresh',{}); await load(true); toast('Read '+r.tasks+' rows from '+r.kind+' ('+r.rooms+' rooms)'); }catch(err){ toast(err.message); } finally { $('refresh').disabled=false; } };
 
   // property editors: the current detail column (sub-item when open) owns the edits
@@ -721,12 +787,12 @@ async function act(a){
 async function gate(verb, id){
   try{
     if(verb==='accept'){
-      const body = {};
+      const body = {file: U.file !== false};
       if(U.editing && U.editValue !== null){ let v = U.editValue; try{ if(/^[\[{]/.test(v)) v = JSON.parse(v); }catch(e){} body.to = v; }
       await api('POST','/api/changes/'+id+'/accept', body); toast('Accepted; queued through the same write path');
     } else if(verb==='respond'){
       const text = ($('rtext') && $('rtext').value.trim()) || ''; if(!text){ toast('Say what to do instead.'); return; }
-      await api('POST','/api/changes/'+id+'/respond', {text}); toast('Returned to the agent with your note');
+      await api('POST','/api/changes/'+id+'/respond', {text, file: U.file !== false}); toast('Returned to the agent with your note');
     } else if(verb==='ignore'){
       await api('POST','/api/changes/'+id+'/ignore', {}); toast('Ignored. Nothing written; the proposal stays on the record.');
     }
