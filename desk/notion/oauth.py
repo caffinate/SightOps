@@ -35,13 +35,14 @@ class OAuthError(Exception):
 
 
 def _get_json(url: str, opener: Any) -> Any:
-    request = urllib.request.Request(url, headers={"Accept": "application/json"})
+    request = urllib.request.Request(url, headers={"Accept": "application/json", "User-Agent": cfg.USER_AGENT})
     with opener.open(request, timeout=30) as response:
         return json.loads(response.read().decode("utf-8"))
 
 
 def _post_json(url: str, payload: dict[str, Any], opener: Any) -> dict[str, Any]:
-    request = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers={"Content-Type": "application/json", "Accept": "application/json"}, method="POST")
+    request = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers={
+        "Content-Type": "application/json", "Accept": "application/json", "User-Agent": cfg.USER_AGENT}, method="POST")
     try:
         with opener.open(request, timeout=30) as response:
             return json.loads(response.read().decode("utf-8"))
@@ -51,7 +52,7 @@ def _post_json(url: str, payload: dict[str, Any], opener: Any) -> dict[str, Any]
 
 def _post_form(url: str, fields: dict[str, str], opener: Any, headers: dict[str, str] | None = None) -> dict[str, Any]:
     body = urllib.parse.urlencode(fields).encode("utf-8")
-    all_headers = {"Content-Type": "application/x-www-form-urlencoded", "Accept": "application/json"}
+    all_headers = {"Content-Type": "application/x-www-form-urlencoded", "Accept": "application/json", "User-Agent": cfg.USER_AGENT}
     all_headers.update(headers or {})
     request = urllib.request.Request(url, data=body, headers=all_headers, method="POST")
     try:
@@ -76,7 +77,7 @@ def challenge(mcp_url: str, opener: Any) -> dict[str, str]:
     """
     body = json.dumps({"jsonrpc": "2.0", "id": 0, "method": "ping"}).encode("utf-8")
     request = urllib.request.Request(mcp_url, data=body, method="POST", headers={
-        "Content-Type": "application/json", "Accept": "application/json, text/event-stream"})
+        "Content-Type": "application/json", "Accept": "application/json, text/event-stream", "User-Agent": cfg.USER_AGENT})
     try:
         with opener.open(request, timeout=30):
             return {}

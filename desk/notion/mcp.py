@@ -13,6 +13,8 @@ import urllib.request
 from dataclasses import dataclass, field
 from typing import Any, Callable
 
+from .. import config as cfg
+
 PROTOCOL_VERSION = "2025-06-18"
 
 
@@ -75,6 +77,7 @@ class MCPClient:
             "Content-Type": "application/json",
             "Accept": "application/json, text/event-stream",
             "MCP-Protocol-Version": PROTOCOL_VERSION,
+            "User-Agent": cfg.USER_AGENT,
         }
         token = self.token_provider()
         if token:

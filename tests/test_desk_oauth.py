@@ -4,20 +4,27 @@ import tempfile
 import threading
 import time
 import unittest
+import urllib.error
 import urllib.parse
 import urllib.request
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
+from desk import config as cfg
 from desk.notion.oauth import NotionOAuth, OAuthError, TokenStore, discover, parse_challenge
 
 
 class FakeAuthServer(BaseHTTPRequestHandler):
-    """A stand-in for mcp.notion.com: the MCP endpoint's challenge, both well-known documents, registration, tokens."""
+    """A stand-in for mcp.notion.com: the MCP endpoint's challenge, both well-known documents, registration, tokens.
+
+    Like the Cloudflare edge in front of the real server, it answers Python's
+    default User-Agent with 403, so every test here also proves the desk names itself.
+    """
 
     base = ""
     token_requests = []
     registrations = []
+    user_agents = []
     challenge = True            # the MCP endpoint answers 401 with a WWW-Authenticate challenge
     resource_metadata = True    # protected resource metadata is published at all
     root_form = True            # ... at the root well-known location as well as the path-insertion one
@@ -28,6 +35,7 @@ class FakeAuthServer(BaseHTTPRequestHandler):
     def reset(cls):
         cls.token_requests = []
         cls.registrations = []
+        cls.user_agents = []
         cls.challenge = True
         cls.resource_metadata = True
         cls.root_form = True
@@ -44,9 +52,22 @@ class FakeAuthServer(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def _edge_refuses(self):
+        agent = self.headers.get("User-Agent") or ""
+        FakeAuthServer.user_agents.append(agent)
+        if agent.startswith("Python-urllib"):
+            self.send_response(403)
+            self.send_header("Content-Type", "text/plain; charset=UTF-8")
+            self.end_headers()
+            self.wfile.write(b"error code: 1010")
+            return True
+        return False
+
     def do_GET(self):
         cls = FakeAuthServer
-        resource = {"resource": cls.base + "/mcp", "authorization_servers": [cls.base], "scopes_supported": ["read", "write"]}
+        if self._edge_refuses():
+            return
+        resource ={"resource": cls.base + "/mcp", "authorization_servers": [cls.base], "scopes_supported": ["read", "write"]}
         if self.path == "/.well-known/oauth-protected-resource/mcp" and cls.resource_metadata:
             self._json(200, resource)
         elif self.path == "/.well-known/oauth-protected-resource" and cls.resource_metadata and cls.root_form:
@@ -62,6 +83,8 @@ class FakeAuthServer(BaseHTTPRequestHandler):
         cls = FakeAuthServer
         length = int(self.headers.get("Content-Length") or 0)
         raw = self.rfile.read(length).decode()
+        if self._edge_refuses():
+            return
         if self.path == "/mcp":
             self.send_response(401)
             if cls.challenge:
@@ -144,6 +167,19 @@ class OAuthTests(unittest.TestCase):
         self.assertEqual(sent["resource"], FakeAuthServer.base + "/mcp")
         self.assertEqual(sent["client_id"], "client-123")
         self.assertNotIn("client_secret", sent)
+
+    def test_every_request_names_the_desk_not_python(self):
+        with self.assertRaises(urllib.error.HTTPError) as caught:
+            urllib.request.urlopen(FakeAuthServer.base + "/.well-known/oauth-authorization-server", timeout=5)
+        self.assertEqual(caught.exception.code, 403)
+        FakeAuthServer.user_agents = []
+        metadata = discover(FakeAuthServer.base + "/mcp")
+        client_id = self.flow.register_client(metadata)
+        self.flow.exchange(metadata, client_id, "good-code", "v" * 43)
+        self.store.data["expires_at"] = time.time() - 10
+        self.flow.token()
+        self.assertGreaterEqual(len(FakeAuthServer.user_agents), 5)
+        self.assertEqual(set(FakeAuthServer.user_agents), {cfg.USER_AGENT})
 
     def test_discovery_without_a_challenge_or_root_document(self):
         FakeAuthServer.challenge = False

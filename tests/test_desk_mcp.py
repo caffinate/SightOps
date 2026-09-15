@@ -3,6 +3,7 @@ import threading
 import unittest
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
+from desk import config as cfg
 from desk.notion.client import MCPNotionClient, parse_fetch_properties, parse_fetch_schema, parse_results
 from desk.notion.mcp import MCPAuthError, MCPClient, MCPError, parse_sse
 
@@ -24,6 +25,13 @@ class FakeMCPHandler(BaseHTTPRequestHandler):
         length = int(self.headers.get("Content-Length") or 0)
         message = json.loads(self.rfile.read(length))
         FakeMCPHandler.calls.append({"headers": {k.lower(): v for k, v in self.headers.items()}, "message": message})
+        if (self.headers.get("User-Agent") or "").startswith("Python-urllib"):
+            # What the Cloudflare edge in front of mcp.notion.com does with Python's default User-Agent.
+            self.send_response(403)
+            self.send_header("Content-Type", "text/plain; charset=UTF-8")
+            self.end_headers()
+            self.wfile.write(b"error code: 1010")
+            return
         if self.headers.get("Authorization") != f"Bearer {self.require_token}":
             self.send_response(401)
             self.send_header("WWW-Authenticate", 'Bearer resource_metadata="https://x/.well-known/oauth-protected-resource"')
@@ -113,6 +121,7 @@ class MCPClientTests(unittest.TestCase):
         self.assertEqual(FakeMCPHandler.calls[2]["headers"].get("mcp-session-id"), "sess-1")
         self.assertEqual(FakeMCPHandler.calls[2]["headers"].get("mcp-protocol-version"), "2025-06-18")
         self.assertEqual(FakeMCPHandler.calls[2]["headers"].get("authorization"), "Bearer secret")
+        self.assertEqual({c["headers"].get("user-agent") for c in FakeMCPHandler.calls}, {cfg.USER_AGENT})
 
     def test_missing_credential_is_an_auth_error(self):
         client = MCPClient(self.url, token_provider=lambda: None)
