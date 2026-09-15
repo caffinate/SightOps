@@ -18,13 +18,15 @@ python3 -m desk snapshot         # pull a live snapshot into DESK_HOME
 python3 -m unittest discover -s tests
 ```
 
+The desk needs Python 3.9 or newer and nothing outside the standard library; the Python that ships with Apple's command-line tools is enough.
+
 With no live snapshot the desk serves the real data captured on 14 September 2026 from `fixtures/notion-2026-09-14/`. State lives under `DESK_HOME` (default `~/.config/desk`): the live snapshot, the pending queue, the Notion credential. Nothing of that is in the repository.
 
 ## One write path, two authors
 
 Every change is the same object: task, property, from, to, by. A change Nathan makes applies to the local copy at once and queues. A change the agent proposes waits at the gate (accept, edit, respond, ignore) and, once accepted, queues the same way. One pending list, one payload, attributed. The payload is the literal `notion-update-page` call per task, in that database's own vocabulary; nothing normalised is ever written. Every sent write is read back before it counts as done.
 
-Writes go through Notion MCP only, never `api.notion.com`. The desk gets its own connection with `python3 -m desk auth` (OAuth against the MCP server, tokens under `DESK_HOME`). Until a credential is on file the payload can be copied out of the desk and sent by any session that holds one.
+Writes go through Notion MCP only, never `api.notion.com`. The desk gets its own connection with `python3 -m desk auth` (OAuth against the MCP server with a registration of its own, tokens under `DESK_HOME`). If Notion stops recognising that registration, `python3 -m desk auth --fresh` registers again from scratch. Until a credential is on file the payload can be copied out of the desk and sent by any session that holds one.
 
 ## Per-room configuration
 

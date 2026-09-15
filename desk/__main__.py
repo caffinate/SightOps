@@ -1,7 +1,7 @@
 """Command line for the desk.
 
   python3 -m desk serve [port]      serve the desk on localhost
-  python3 -m desk auth              connect the desk to Notion MCP (OAuth, its own connection)
+  python3 -m desk auth [--fresh]    connect the desk to Notion MCP (OAuth, its own connection); --fresh registers anew
   python3 -m desk snapshot          pull a live snapshot through Notion MCP into DESK_HOME
   python3 -m desk findings          print the dirt, room by room
   python3 -m desk payload           print the notion-update-page calls that would be sent
@@ -27,11 +27,29 @@ def main(argv: list[str]) -> int:
         serve(int(argv[2]) if len(argv) > 2 and argv[2].isdigit() else cfg.DEFAULT_PORT)
         return 0
     if command == "auth":
-        from .notion.oauth import NotionOAuth
+        from .notion.mcp import MCPClient, MCPError
+        from .notion.oauth import NotionOAuth, OAuthError
 
-        token = NotionOAuth().login()
-        print("Connected." if token else "No token received.")
-        return 0 if token else 1
+        flow = NotionOAuth()
+        if "--fresh" in argv[2:]:
+            flow.forget()
+        try:
+            token = flow.login()
+        except OAuthError as exc:
+            print(f"Not connected: {exc}", file=sys.stderr)
+            return 1
+        if not token:
+            print("Not connected: no token received.", file=sys.stderr)
+            return 1
+        print(f"Token stored at {cfg.NOTION_AUTH_PATH}.")
+        try:
+            info = MCPClient(cfg.NOTION_MCP_URL, token_provider=flow.token).initialize()
+        except MCPError as exc:
+            print(f"Token stored, but the first request to {cfg.NOTION_MCP_URL} failed: {exc}", file=sys.stderr)
+            return 1
+        server = info.get("serverInfo") or {}
+        print(f"Connected to {server.get('name') or cfg.NOTION_MCP_URL} {server.get('version') or ''}".rstrip() + ".")
+        return 0
     service = DeskService()
     if command == "snapshot":
         print(json.dumps(service.refresh(), indent=1))

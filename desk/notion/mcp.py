@@ -93,7 +93,8 @@ class MCPClient:
             body = exc.read().decode("utf-8", "replace") if exc.fp else ""
             headers = {k.lower(): v for k, v in exc.headers.items()} if exc.headers else {}
             if exc.code in (401, 403):
-                raise MCPAuthError(f"Notion MCP answered {exc.code}: {body[:300] or exc.reason}", status=exc.code, data=headers.get("www-authenticate")) from exc
+                raise MCPAuthError(f"Notion MCP answered {exc.code}: {body[:300] or exc.reason}. Run `python3 -m desk auth` to connect the desk, or to reconnect it if its token has lapsed.",
+                                   status=exc.code, data=headers.get("www-authenticate")) from exc
             raise MCPError(f"Notion MCP answered {exc.code}: {body[:300] or exc.reason}", status=exc.code) from exc
         except urllib.error.URLError as exc:
             raise MCPError(f"Notion MCP unreachable at {self.url}: {exc.reason}") from exc

@@ -13,6 +13,9 @@ FETCH_DS = "<data-source url=\"{{collection://ab}}\">\n<data-source-state>\n{\"n
 class FakeMCPHandler(BaseHTTPRequestHandler):
     calls = []
     require_token = "secret"
+    async_updates = False        # answer a write with an async task instead of a result
+    async_outcome = "succeeded"  # what the task reports once polled
+    polls = 0
 
     def log_message(self, *_):
         return
@@ -43,14 +46,27 @@ class FakeMCPHandler(BaseHTTPRequestHandler):
         if method == "tools/call":
             name = message["params"]["name"]
             if name == "notion-update-page":
-                result = {"content": [{"type": "text", "text": json.dumps({"ok": True})}], "isError": False}
+                if FakeMCPHandler.async_updates:
+                    text = json.dumps({"async_task": {"task_id": "task-9", "status": "queued", "poll_after_ms": 10}})
+                else:
+                    text = json.dumps({"ok": True})
+                result = {"content": [{"type": "text", "text": text}], "isError": False}
                 payload = json.dumps({"jsonrpc": "2.0", "id": message["id"], "result": result})
                 self.send_response(200)
                 self.send_header("Content-Type", "text/event-stream")
                 self.end_headers()
                 self.wfile.write(b"event: message\ndata: " + payload.encode() + b"\n\n")
                 return
-            if name == "notion-fetch":
+            if name == "notion-get-async-task":
+                FakeMCPHandler.polls += 1
+                if FakeMCPHandler.polls < 2:
+                    text = json.dumps({"task_id": "task-9", "status": "running", "poll_after_ms": 10})
+                elif FakeMCPHandler.async_outcome == "succeeded":
+                    text = json.dumps({"task_id": "task-9", "status": "succeeded", "result": {"ok": True, "page_id": "1" * 32}})
+                else:
+                    text = json.dumps({"task_id": "task-9", "status": "failed", "error": {"message": "validation failed"}})
+                result = {"content": [{"type": "text", "text": text}]}
+            elif name == "notion-fetch":
                 text = FETCH_PAGE if not message["params"]["arguments"]["id"].startswith("collection") else FETCH_DS
                 result = {"content": [{"type": "text", "text": text}]}
             elif name == "notion-query-data-sources":
@@ -84,6 +100,9 @@ class MCPClientTests(unittest.TestCase):
 
     def setUp(self):
         FakeMCPHandler.calls = []
+        FakeMCPHandler.async_updates = False
+        FakeMCPHandler.async_outcome = "succeeded"
+        FakeMCPHandler.polls = 0
 
     def test_initialize_then_call_with_session_id_and_sse_response(self):
         client = MCPClient(self.url, token_provider=lambda: "secret")
@@ -97,8 +116,9 @@ class MCPClientTests(unittest.TestCase):
 
     def test_missing_credential_is_an_auth_error(self):
         client = MCPClient(self.url, token_provider=lambda: None)
-        with self.assertRaises(MCPAuthError):
+        with self.assertRaises(MCPAuthError) as caught:
             client.call_tool("notion-fetch", {"id": "x"})
+        self.assertIn("python3 -m desk auth", str(caught.exception))
 
     def test_tool_errors_raise(self):
         client = MCPClient(self.url, token_provider=lambda: "secret")
@@ -117,6 +137,28 @@ class MCPClientTests(unittest.TestCase):
         self.assertEqual(notion.list_users(), [])
         query_call = next(c for c in FakeMCPHandler.calls if c["message"].get("params", {}).get("name") == "notion-query-data-sources")
         self.assertIn('SELECT * FROM "collection://abababab-abab-abab-abab-abababababab"', query_call["message"]["params"]["arguments"]["data"]["query"])
+
+    def test_a_queued_write_is_awaited_before_it_counts(self):
+        FakeMCPHandler.async_updates = True
+        notion = MCPNotionClient(MCPClient(self.url, token_provider=lambda: "secret"))
+        text = notion.update_properties("1" * 32, {"Status": "Done"})
+        self.assertEqual(json.loads(text)["ok"], True)
+        names = [c["message"]["params"]["name"] for c in FakeMCPHandler.calls if c["message"].get("method") == "tools/call"]
+        self.assertEqual(names, ["notion-update-page", "notion-get-async-task", "notion-get-async-task"])
+        self.assertEqual(FakeMCPHandler.calls[-1]["message"]["params"]["arguments"], {"task_id": "task-9"})
+
+    def test_a_failed_queued_write_is_an_error(self):
+        FakeMCPHandler.async_updates = True
+        FakeMCPHandler.async_outcome = "failed"
+        notion = MCPNotionClient(MCPClient(self.url, token_provider=lambda: "secret"))
+        with self.assertRaises(MCPError) as caught:
+            notion.update_properties("1" * 32, {"Status": "Done"})
+        self.assertIn("validation failed", str(caught.exception))
+
+    def test_a_plain_result_is_returned_untouched(self):
+        notion = MCPNotionClient(MCPClient(self.url, token_provider=lambda: "secret"))
+        self.assertEqual(json.loads(notion.update_properties("1" * 32, {"Status": "Done"})), {"ok": True})
+        self.assertEqual(FakeMCPHandler.polls, 0)
 
 
 class ParserTests(unittest.TestCase):

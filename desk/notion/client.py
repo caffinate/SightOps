@@ -11,7 +11,8 @@ from __future__ import annotations
 import copy
 import json
 import re
-from typing import Any
+import time
+from typing import Any, Callable
 
 from .. import config as cfg
 from ..values import dashed, page_id_from_url
@@ -19,6 +20,7 @@ from .mcp import MCPClient, MCPError
 
 _PROPERTIES = re.compile(r"<properties>\s*(\{.*?\})\s*</properties>", re.DOTALL)
 _STATE = re.compile(r"<data-source-state>\s*(\{.*?\})\s*</data-source-state>", re.DOTALL)
+_ASYNC_PENDING = {"queued", "running", "retrying"}
 
 
 def _unwrap(text: str) -> str:
@@ -58,11 +60,69 @@ def parse_results(text: str) -> list[dict[str, Any]]:
     return list(loaded)
 
 
+def _load(text: str) -> Any:
+    try:
+        return json.loads(_unwrap(text))
+    except json.JSONDecodeError:
+        return None
+
+
+def async_task_of(loaded: Any) -> dict[str, Any] | None:
+    """The async task envelope in a tool result, when a write was queued instead of applied.
+
+    Notion may answer a write with an async task even when asked for a
+    synchronous result, if the queue is slow. Such a write has not happened
+    yet, so it must be awaited before the read-back means anything.
+    """
+    if not isinstance(loaded, dict):
+        return None
+    task = loaded.get("async_task")
+    if isinstance(task, dict) and (task.get("task_id") or task.get("id")):
+        return task
+    if loaded.get("task_id") and loaded.get("status") in _ASYNC_PENDING:
+        return loaded
+    return None
+
+
+def _backoff(task: dict[str, Any], default: float = 1.0) -> float:
+    """The wait the server suggests before the next poll, in seconds."""
+    for key in ("poll_after_ms", "retry_after_ms", "backoff_ms"):
+        if isinstance(task.get(key), (int, float)):
+            return max(float(task[key]) / 1000.0, 0.01)
+    for key in ("retry_after", "poll_after", "backoff_seconds", "suggested_backoff_seconds"):
+        if isinstance(task.get(key), (int, float)):
+            return max(float(task[key]), 0.01)
+    return default
+
+
 class MCPNotionClient:
     """The live client. Only the tools the desk needs, and only through MCP."""
 
-    def __init__(self, mcp: MCPClient) -> None:
+    def __init__(self, mcp: MCPClient, poll_timeout: float = 120.0, sleep: Callable[[float], None] = time.sleep) -> None:
         self.mcp = mcp
+        self.poll_timeout = poll_timeout
+        self.sleep = sleep
+
+    def _settle(self, text: str) -> str:
+        """If a write was accepted for background execution, wait for it to finish and return its result."""
+        task = async_task_of(_load(text))
+        if not task:
+            return text
+        task_id = str(task.get("task_id") or task.get("id"))
+        deadline = time.monotonic() + self.poll_timeout
+        delay = _backoff(task)
+        while True:
+            self.sleep(delay)
+            polled = _load(self.mcp.call_tool("notion-get-async-task", {"task_id": task_id}).text)
+            polled = polled if isinstance(polled, dict) else {}
+            status = polled.get("status") or (polled.get("async_task") or {}).get("status")
+            if status == "succeeded":
+                return json.dumps(polled["result"] if polled.get("result") is not None else polled)
+            if status == "failed":
+                raise MCPError(f"the queued write {task_id} failed: {json.dumps(polled.get('error') or polled)[:300]}", data=polled)
+            if time.monotonic() > deadline:
+                raise MCPError(f"the queued write {task_id} is still {status or 'pending'} after {int(self.poll_timeout)}s; not read back", data=polled)
+            delay = min(_backoff(polled, delay * 2), 10.0)
 
     def fetch_schema(self, ds_id: str) -> tuple[str | None, dict[str, Any]]:
         result = self.mcp.call_tool("notion-fetch", {"id": f"collection://{dashed(ds_id.replace('-', ''))}"})
@@ -97,7 +157,7 @@ class MCPNotionClient:
             "properties": properties,
             "allow_async": False,
         })
-        return result.text
+        return self._settle(result.text)
 
     def page_properties(self, page_id: str) -> dict[str, Any]:
         result = self.mcp.call_tool("notion-fetch", {"id": dashed(page_id.replace("-", ""))})
@@ -109,7 +169,7 @@ class MCPNotionClient:
             "pages": [{"properties": properties}],
             "allow_async": False,
         })
-        text = result.text
+        text = self._settle(result.text)
         page_id = None
         try:
             loaded = json.loads(_unwrap(text))
