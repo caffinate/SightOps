@@ -230,7 +230,13 @@ class DeskService:
                     save_snapshot(self.snapshot, self.snapshot_path)
             self.desk = Desk(self.snapshot)
             self._replay_local()
-            return {"kind": kind, "captured_at": self.snapshot.get("captured_at"), "rooms": len(self.desk.tasks_by_room), "tasks": len(self.desk.tasks)}
+            result = {"kind": kind, "captured_at": self.snapshot.get("captured_at"), "rooms": len(self.desk.tasks_by_room),
+                      "tasks": len(self.desk.tasks), "credential": client is not None}
+            if client is None:
+                result["note"] = "No Notion MCP credential on file, so this is the fixture, not a live snapshot. Run `python3 -m desk auth` first."
+            elif self.snapshot_path:
+                result["saved_to"] = str(self.snapshot_path)
+            return result
 
     def now(self) -> str:
         return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")

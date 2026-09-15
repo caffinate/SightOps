@@ -52,7 +52,11 @@ def main(argv: list[str]) -> int:
         return 0
     service = DeskService()
     if command == "snapshot":
-        print(json.dumps(service.refresh(), indent=1))
+        result = service.refresh()
+        print(json.dumps(result, indent=1))
+        if not result.get("credential"):
+            print(result.get("note", "No Notion MCP credential on file."), file=sys.stderr)
+            return 1
         return 0
     if command == "findings":
         for finding in service.desk.findings:

@@ -352,7 +352,8 @@ function render(){
   if(t) c += '<span class="sep">/</span><b>'+esc(t.title||'(untitled row)')+'</b>';
   if(s) c += '<span class="sep">/</span><b>'+esc(s.title||'(untitled row)')+'</b>';
   $('crumbs').innerHTML = c;
-  $('stamp').innerHTML = '<b>'+esc(D.source.kind)+'</b> · read '+esc(String(D.source.captured_at||'').replace('T',' ').slice(0,16))+' · '+Object.keys(D.tasks).length+' rows in '+wiredRooms().length+' rooms';
+  $('stamp').innerHTML = '<b>'+esc(D.source.kind)+'</b> · read '+esc(String(D.source.captured_at||'').replace('T',' ').slice(0,16))+' · '+Object.keys(D.tasks).length+' rows in '+wiredRooms().length+' rooms · '+
+    (D.write_path.credential ? '<b title="'+esc(D.write_path.mcp_url)+'">Notion connected</b>' : '<b title="'+esc(D.write_path.note)+'">Notion not connected</b> (run python3 -m desk auth)');
   $('pendwrap').innerHTML = pendingPill();
   $('paywrap').innerHTML = payloadPanel();
   $('cols').innerHTML = navCol() + (S.sub ? spineCol() : roomCol()) + (t ? detailCol(S.task, 'Task', 'taskTab') : '<section class="col detail"><div class="empty">Select a task.</div></section>') + (s ? detailCol(S.sub, 'Sub-item', 'subTab') : '') + agentCol();
