@@ -1,0 +1,17 @@
+{
+  "captured_at": "2026-09-14T20:55:00Z",
+  "captured_via": "Notion MCP through the claude.ai connector, signed in as Nathan Thompson: notion-fetch for schemas, notion-query-data-sources in SQL mode for rows, notion-get-users for people.",
+  "workspace": {
+    "id": "87be7aa8-ef14-41ca-b2bf-cb03cf0a2aa0",
+    "name": "Sightbox"
+  },
+  "register_data_source_id": "bb434a7e-858d-47c6-9e66-f58817f5b3f8",
+  "clipboard_data_source_id": "9094f21d-feca-46b3-a8c8-24ab27048fd5",
+  "notes": [
+    "Rows are stored exactly as the SQL query returned them: expanded date columns (date:<name>:start / :end / :is_datetime), JSON-encoded arrays as strings for people, relations and multi-selects, __YES__/__NO__ for checkboxes.",
+    "Schemas are reduced to what the harness needs: property type, option names in Notion's order, status groups, relation targets. Option colours and option URLs were dropped.",
+    "Clipboard rows carry the short columns only. Choices and Nathan call were not captured in full.",
+    "Nothing in this fixture has been cleaned. The known dirt is in here on purpose.",
+    "Register rows carry the three per-room configuration fields (Grouping field, Status vocabulary, Owner field) created and populated on 14 Sep 2026 as build order 3, read back from Notion the same evening."
+  ]
+}

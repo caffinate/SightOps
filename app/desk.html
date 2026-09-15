@@ -1,0 +1,740 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Desk</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+:root{
+  --ground:#EFF1F2; --surface:#FFFFFF; --rail:#E7EBED; --sunk:#E3E8EA; --spine:#DDE3E6;
+  --ink:#14181C; --muted:#5A646C; --faint:#87919A; --rule:#CCD4D8; --hair:#DEE4E7;
+  --accent:#1D5C7A; --accent-ink:#FFFFFF; --accent-soft:#D8E6ED;
+  --signal:#A2620C; --signal-soft:#F6E8D1; --signal-line:#D2A14E;
+  --hot:#8F3413; --hot-soft:#F4DBD0;
+  --good:#28654A; --good-soft:#D6E9DE;
+  --new:#7A3E86; --new-soft:#EDDFF0;
+  --dead:#8A9298;
+  --display:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --body:"IBM Plex Sans","Segoe UI",Helvetica,Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){ :root{
+  --ground:#0D1114; --surface:#151B1F; --rail:#111618; --sunk:#1C2429; --spine:#192025;
+  --ink:#E2E7E9; --muted:#939EA5; --faint:#6C777E; --rule:#283238; --hair:#1F272C;
+  --accent:#74B6D4; --accent-ink:#0A1013; --accent-soft:#19323E;
+  --signal:#DFAC5E; --signal-soft:#332614; --signal-line:#84632A;
+  --hot:#E08A66; --hot-soft:#3A2018;
+  --good:#7FC3A0; --good-soft:#172D23;
+  --new:#C79BD0; --new-soft:#2E2033;
+  --dead:#5C666C;
+}}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--ground);color:var(--ink);font-family:var(--body);font-size:13.5px;line-height:1.5;-webkit-font-smoothing:antialiased;overflow:hidden}
+button{font:inherit;color:inherit;cursor:pointer;background:none;border:none;padding:0;text-align:left}
+input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.m{font-family:var(--mono)}
+.hidden{display:none!important}
+
+.app{height:100vh;display:flex;flex-direction:column;min-width:1380px}
+.topbar{height:42px;flex:none;display:flex;align-items:center;gap:16px;padding:0 16px;border-bottom:1px solid var(--rule);background:var(--rail)}
+.brand{font-family:var(--display);font-weight:800;font-size:14.5px;letter-spacing:-.02em;white-space:nowrap}
+.brand em{font-style:normal;font-weight:500;color:var(--faint)}
+.crumbs{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11px;color:var(--faint);min-width:0;overflow:hidden;white-space:nowrap}
+.crumbs b{color:var(--muted);font-weight:500}
+.crumbs .sep{opacity:.5}
+.toolright{margin-left:auto;display:flex;align-items:center;gap:10px;flex:none}
+.stamp{font-family:var(--mono);font-size:10.5px;color:var(--faint)}
+.stamp b{color:var(--muted);font-weight:500}
+.tbtn{font-family:var(--mono);font-size:10.5px;border:1px solid var(--rule);background:var(--surface);color:var(--muted);padding:3px 9px;border-radius:3px}
+.tbtn:hover{border-color:var(--ink);color:var(--ink)}
+.synced{font-family:var(--mono);font-size:10.5px;color:var(--good)}
+.pendbtn{font-family:var(--mono);font-size:10.5px;border:1px solid var(--signal-line);background:var(--signal-soft);color:var(--signal);padding:3px 9px;border-radius:3px;font-weight:600}
+.pendbtn.on{background:var(--signal);color:var(--surface);border-color:var(--signal)}
+.pendbtn .by{font-weight:400;opacity:.8}
+
+.cols{flex:1;display:flex;min-height:0}
+.col{display:flex;flex-direction:column;min-height:0;border-right:1px solid var(--rule);background:var(--surface)}
+.col.nav{width:256px;flex:none;background:var(--rail)}
+.col.container{width:372px;flex:none}
+.col.detail{flex:1;min-width:380px}
+.col.agent{width:432px;flex:none;border-right:0}
+.colscroll{overflow-y:auto;min-height:0;flex:1}
+.spine{width:38px;flex:none;border-right:1px solid var(--rule);background:var(--spine);display:flex;flex-direction:column;align-items:center;gap:14px;padding:12px 0;cursor:pointer}
+.spine .lbl{writing-mode:vertical-rl;font-family:var(--mono);font-size:11px;letter-spacing:.09em;color:var(--muted);white-space:nowrap}
+.spine:hover .lbl{color:var(--ink)}
+.spine .ar{font-family:var(--mono);font-size:12px;color:var(--faint)}
+
+.navsec{padding:11px 14px 6px;font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--faint)}
+.qbtn{display:block;width:100%;padding:11px 14px;border-bottom:1px solid var(--rule);border-top:1px solid var(--rule);background:var(--signal-soft)}
+.qbtn.sel{box-shadow:inset 3px 0 0 var(--signal)}
+.qbtn.quiet{background:var(--sunk)}
+.qbtn .r1{display:flex;align-items:center;gap:8px}
+.qbtn .t{font-family:var(--display);font-weight:700;font-size:13.5px;color:var(--signal)}
+.qbtn.quiet .t{color:var(--muted)}
+.qbtn .n{margin-left:auto;font-family:var(--mono);font-size:11px;background:var(--signal);color:var(--surface);padding:0 7px;border-radius:9px;font-weight:600}
+.qbtn.quiet .n{background:var(--faint)}
+.qbtn .r2{font-size:11.5px;color:var(--muted);margin-top:3px;display:block}
+.spacerow{padding:9px 14px 5px;font-family:var(--display);font-weight:700;font-size:12px;color:var(--muted);letter-spacing:.01em}
+.projrow{display:flex;align-items:center;gap:8px;width:100%;padding:6px 14px 6px 20px;font-size:13px;border-left:3px solid transparent}
+.projrow:hover{background:var(--surface)}
+.projrow.sel{background:var(--surface);border-left-color:var(--accent);font-weight:600}
+.projrow.dim{color:var(--faint);cursor:default}
+.projrow.dim:hover{background:transparent}
+.projrow .n{margin-left:auto;font-family:var(--mono);font-size:10px;background:var(--accent);color:var(--surface);padding:0 6px;border-radius:8px}
+.projrow .n.wait{background:var(--signal)}
+.projrow .tag{margin-left:auto;font-family:var(--mono);font-size:9.5px;color:var(--faint)}
+.navfoot{margin-top:auto;border-top:1px solid var(--rule);padding:10px 14px;font-size:11.5px;color:var(--muted);font-family:var(--mono)}
+
+.chead{padding:13px 16px 11px;border-bottom:1px solid var(--hair);flex:none}
+.ckick{font-family:var(--mono);font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--faint);margin-bottom:3px}
+.ctitle{font-family:var(--display);font-weight:700;font-size:17px;letter-spacing:-.018em;line-height:1.2}
+.cmeta{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.pill{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10.5px;padding:2px 7px;border:1px solid var(--rule);border-radius:2px;color:var(--muted);white-space:nowrap}
+.pill.wait{border-color:var(--signal-line);color:var(--signal);background:var(--signal-soft);font-weight:600}
+.pill.hot{border-color:var(--hot);color:var(--hot);background:var(--hot-soft);font-weight:600}
+.pill.run{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.pill.done{border-color:var(--good);color:var(--good);background:var(--good-soft)}
+.pill.new{border-color:var(--new);color:var(--new);background:var(--new-soft)}
+.pill a{color:inherit;text-decoration:none}
+.brief{padding:12px 16px;background:var(--sunk);border-bottom:1px solid var(--hair);flex:none;max-height:150px;overflow:auto}
+.brieflbl{font-family:var(--mono);font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--faint);display:flex;gap:8px;margin-bottom:6px}
+.brieflbl .hint{margin-left:auto;text-transform:none;letter-spacing:.02em;font-size:10.5px}
+.brief p{margin:0;font-size:12.5px;line-height:1.5;color:var(--muted)}
+.tabs{display:flex;flex-wrap:wrap;border-bottom:1px solid var(--rule);background:var(--sunk);flex:none}
+.tab{padding:7px 9px;font-size:11.5px;white-space:nowrap;border-right:1px solid var(--hair);display:flex;align-items:center;gap:5px;color:var(--muted)}
+.tab:hover{color:var(--ink)}
+.tab.sel{background:var(--surface);color:var(--ink);font-weight:600;box-shadow:inset 0 2px 0 var(--accent)}
+.tab .ct{font-family:var(--mono);font-size:10px;color:var(--faint)}
+.tab.empty{color:var(--dead)}
+.tab .dot{width:6px;height:6px;border-radius:50%;background:var(--signal);flex:none}
+
+.grp{padding:8px 16px 4px;font-family:var(--mono);font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--faint);display:flex;gap:8px;background:var(--surface);position:sticky;top:0;border-bottom:1px solid var(--hair)}
+.grp .n{margin-left:auto;letter-spacing:0}
+.row{display:block;width:100%;padding:9px 16px;border-bottom:1px solid var(--hair);border-left:3px solid transparent;cursor:pointer}
+.row:hover{background:var(--sunk)}
+.row.sel{background:var(--sunk);border-left-color:var(--accent)}
+.row .top{display:flex;align-items:center;gap:8px}
+.row .st{width:9px;height:9px;border-radius:50%;flex:none;box-sizing:border-box}
+.st.todo{border:1px solid var(--faint);background:transparent}
+.st.doing{border:2px solid var(--accent);background:transparent}
+.st.blocked{background:var(--hot)}
+.st.review{background:var(--signal)}
+.st.done{background:var(--good)}
+.st.cancelled{border:1px solid var(--dead);background:transparent}
+.st.unset{border:1px dashed var(--faint);background:transparent}
+.st.unknown{border:1px dashed var(--hot);background:transparent}
+.row .ttl{font-weight:600;font-size:13px;line-height:1.35;min-width:0}
+.row.dim .ttl{font-weight:400;color:var(--muted)}
+.row .tail{margin-left:auto;font-family:var(--mono);font-size:10.5px;flex:none;color:var(--faint)}
+.row .tail.over{color:var(--hot)}
+.row .sub{display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:4px;padding-left:17px;font-family:var(--mono);font-size:10.5px;color:var(--faint);align-items:center}
+select.quickstat{font-family:var(--mono);font-size:10px;padding:0 4px;border:1px solid var(--rule);border-radius:2px;background:var(--surface);color:var(--faint);cursor:pointer;height:17px;max-width:150px}
+select.quickstat:hover{border-color:var(--accent);color:var(--accent)}
+.pendmark{color:var(--signal);font-weight:600}
+.propmark{color:var(--new);font-weight:600}
+.newrow{width:100%;text-align:left;padding:10px 16px;font-size:12.5px;color:var(--faint);border-bottom:1px solid var(--hair)}
+.newrow:hover{color:var(--accent);background:var(--sunk)}
+.empty{padding:22px 20px;font-family:var(--mono);font-size:12px;color:var(--faint);line-height:1.5}
+.note{padding:8px 16px;font-family:var(--mono);font-size:10.5px;color:var(--faint);border-bottom:1px solid var(--hair);background:var(--sunk);line-height:1.45}
+.note.gap{color:var(--signal);background:var(--signal-soft);border-top:1px dashed var(--signal-line);border-bottom:1px dashed var(--signal-line)}
+.list{display:flex;flex-direction:column}
+.li{display:flex;gap:12px;padding:8px 16px;border-bottom:1px solid var(--hair);align-items:baseline}
+.li .k{font-family:var(--mono);font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);width:110px;flex:none;padding-top:2px;word-break:break-word}
+.li .v{font-size:12.5px;color:var(--muted);min-width:0;flex:1}
+.li .v b{color:var(--ink);font-weight:600}
+.li .when{margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--faint);flex:none}
+.chip{display:inline-block;font-family:var(--mono);font-size:10px;padding:1px 6px;background:var(--surface);border:1px solid var(--rule);border-radius:2px;color:var(--muted);margin:1px 2px 1px 0}
+.chip.new{border-color:var(--signal-line);color:var(--signal);background:var(--signal-soft)}
+
+.find{padding:10px 16px;border-bottom:1px solid var(--hair)}
+.find .fr{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--signal);font-weight:600;display:flex;gap:8px}
+.find .fr .lv{margin-left:auto;color:var(--faint);letter-spacing:0;text-transform:none}
+.find .fn{font-size:12.5px;color:var(--muted);margin-top:3px}
+.find ul{margin:6px 0 0;padding-left:16px;font-size:12px;color:var(--muted)}
+.find li{margin-bottom:2px}
+.find li b{color:var(--ink);font-weight:600;cursor:pointer}
+.find li b:hover{color:var(--accent)}
+
+.props{padding:10px 16px;display:flex;flex-direction:column;gap:2px}
+.prow{display:grid;grid-template-columns:132px minmax(0,1fr);gap:12px;align-items:start;padding:4px 6px;border-radius:3px}
+.prow.dirty{background:var(--signal-soft);box-shadow:inset 2px 0 0 var(--signal)}
+.prow.proposed{background:var(--new-soft);box-shadow:inset 2px 0 0 var(--new)}
+.pl{font-family:var(--mono);font-size:10.5px;color:var(--faint);padding-top:8px;word-break:break-word}
+.pl small{display:block;color:var(--dead);font-size:9.5px}
+.pi{font:inherit;font-size:13px;color:var(--ink);background:transparent;border:1px solid transparent;border-radius:3px;padding:5px 7px;width:100%;min-width:0}
+.pi:hover{background:var(--sunk)}
+.pi:focus{background:var(--surface);border-color:var(--accent);outline:none}
+select.pi{cursor:pointer}
+textarea.pi.ta{min-height:64px;resize:vertical;line-height:1.5}
+.pi.ro{color:var(--muted);border-color:transparent;padding-top:6px;font-family:var(--mono);font-size:11.5px}
+.checks{display:flex;flex-wrap:wrap;gap:4px 10px;padding:6px 7px}
+.checks label{font-size:12.5px;display:inline-flex;align-items:center;gap:5px;color:var(--muted)}
+.checks input{accent-color:var(--accent)}
+.titleedit{font-family:var(--display);font-weight:700;font-size:17px;letter-spacing:-.018em;color:var(--ink);background:transparent;border:1px solid transparent;border-radius:3px;padding:2px 5px;margin:1px 0 0 -5px;width:calc(100% + 5px)}
+.titleedit:hover{background:var(--sunk)}
+.titleedit:focus{background:var(--surface);border-color:var(--accent);outline:none}
+.bodyedit{width:calc(100% - 32px);margin:14px 16px;min-height:200px;font:inherit;font-size:13.5px;line-height:1.6;color:var(--ink);background:var(--surface);border:1px solid var(--rule);border-radius:3px;padding:12px;resize:vertical}
+
+.ahead{padding:11px 16px;border-bottom:1px solid var(--rule);display:flex;align-items:center;gap:9px;background:var(--sunk);flex:none}
+.ahead .nm{font-family:var(--display);font-weight:700;font-size:13.5px}
+svg.bot{width:15px;height:15px;flex:none;color:var(--accent)}
+.gate{border-bottom:1px solid var(--rule);background:var(--signal-soft);flex:none;max-height:58%;overflow-y:auto}
+.gate .gh{padding:8px 16px;display:flex;align-items:center;gap:9px;border-bottom:1px solid var(--signal-line);position:sticky;top:0;background:var(--signal-soft);z-index:2}
+.gate .gh .l{font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--signal);font-weight:600}
+.gate .gh .e{margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--signal);border:1px solid var(--signal-line);background:var(--surface);padding:1px 7px;border-radius:2px}
+.gb{padding:13px 16px;display:flex;flex-direction:column;gap:11px}
+.q{font-size:14px;font-weight:600;line-height:1.4}
+.q small{display:block;font-weight:400;font-size:12.5px;color:var(--muted);margin-top:4px}
+.call{border:1px solid var(--rule);border-radius:3px;background:var(--surface);overflow:hidden}
+.call .ch{padding:6px 11px;background:var(--sunk);border-bottom:1px solid var(--rule);display:flex;align-items:center;gap:8px}
+.call .ch .l{font-family:var(--mono);font-size:9.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--faint)}
+.call .ch .fn{font-family:var(--mono);font-size:11px;color:var(--accent);font-weight:600;margin-left:auto}
+.call .cb{padding:10px 11px;display:flex;flex-direction:column;gap:7px}
+.arg{display:grid;grid-template-columns:78px minmax(0,1fr);gap:9px;align-items:start}
+.arg .k{font-family:var(--mono);font-size:10.5px;color:var(--faint);padding-top:5px}
+.arg .v{font-family:var(--mono);font-size:11.5px;background:var(--sunk);padding:4px 7px;border-radius:2px;line-height:1.45;word-break:break-word;border:1px solid transparent}
+.arg .v.from{color:var(--dead);text-decoration:line-through}
+.arg input.v,.arg select.v,.arg textarea.v{width:100%;background:var(--surface);border-color:var(--accent)}
+.verbs{display:flex;flex-wrap:wrap;gap:6px}
+.btn{border:1px solid var(--rule);background:var(--surface);border-radius:3px;padding:6px 13px;font-family:var(--display);font-weight:600;font-size:12.5px}
+.btn:hover{border-color:var(--ink)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.on{border-color:var(--signal-line);background:var(--signal-soft);color:var(--signal)}
+.btn.q{color:var(--muted)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.respond{display:none;flex-direction:column;gap:7px}
+.respond.open{display:flex}
+.respond textarea{font-family:var(--body);font-size:13px;padding:8px 10px;border:1px solid var(--accent);border-radius:3px;background:var(--surface);color:var(--ink);min-height:64px;resize:vertical;width:100%}
+.idle{padding:14px 16px;font-size:12.5px;color:var(--muted);border-bottom:1px solid var(--rule);background:var(--sunk)}
+.astream{flex:1;min-height:0;overflow-y:auto}
+.ai{display:flex;gap:11px;padding:9px 16px;border-bottom:1px solid var(--hair)}
+.ai .k{font-family:var(--mono);font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;width:64px;flex:none;padding-top:2px;color:var(--faint)}
+.ai .k.you{color:var(--ink);font-weight:600}
+.ai .k.agent{color:var(--new);font-weight:600}
+.ai .v{font-size:12.5px;line-height:1.5;color:var(--muted);min-width:0}
+.ai .v code{font-family:var(--mono);font-size:11px;background:var(--sunk);padding:1px 4px;border-radius:2px}
+.ai .v .st{display:inline-block;margin-left:6px;font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)}
+.prompt{border-top:1px solid var(--rule);padding:9px 16px;display:flex;align-items:center;gap:10px;flex:none;background:var(--sunk)}
+.prompt input{flex:1;background:var(--surface);border:1px solid var(--rule);border-radius:3px;padding:6px 10px;font-size:12.5px;color:var(--ink);min-width:0}
+.prompt input:disabled{color:var(--faint);background:var(--sunk)}
+.propose{padding:12px 16px;border-bottom:1px solid var(--hair);display:flex;flex-direction:column;gap:6px;background:var(--new-soft)}
+.propose .l{font-family:var(--mono);font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--new);font-weight:600}
+.propose .f{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.propose select,.propose input{font-size:12px;padding:5px 7px;border:1px solid var(--rule);border-radius:3px;background:var(--surface);color:var(--ink);min-width:0;width:100%}
+
+.payload{border-bottom:1px solid var(--rule);background:var(--sunk);max-height:40vh;overflow-y:auto;flex:none}
+.payload .ph{display:flex;align-items:center;gap:12px;padding:8px 16px;border-bottom:1px solid var(--rule);font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);position:sticky;top:0;background:var(--sunk);z-index:2}
+.payload .ph .right{margin-left:auto;display:flex;gap:6px}
+.payload .ph .btn{padding:3px 9px;font-size:11px}
+.payload .pb{padding:10px 16px;display:flex;flex-direction:column;gap:10px}
+.pcall{border:1px solid var(--rule);border-radius:3px;background:var(--surface);overflow:hidden}
+.pfn{font-family:var(--mono);font-size:11.5px;color:var(--accent);font-weight:600;padding:6px 11px;border-bottom:1px solid var(--hair);background:var(--sunk);display:flex;gap:8px;align-items:center}
+.pfn .pid{color:var(--ink);font-weight:400;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pfn .rm{margin-left:auto;color:var(--faint);font-weight:400;flex:none}
+.pline{display:grid;grid-template-columns:52px 120px minmax(0,1fr) 16px minmax(0,1fr) 70px 22px;gap:9px;align-items:baseline;padding:6px 11px;font-family:var(--mono);font-size:11px;border-top:1px solid var(--hair)}
+.pline:first-of-type{border-top:0}
+.pby{font-size:9px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;padding:1px 5px;border-radius:2px;text-align:center}
+.pby.nathan{color:var(--accent);border:1px solid var(--accent);background:var(--accent-soft)}
+.pby.agent{color:var(--new);border:1px solid var(--new);background:var(--new-soft)}
+.pk{color:var(--faint);word-break:break-word}
+.pv{word-break:break-word}
+.pv.from{color:var(--dead);text-decoration:line-through}
+.pv.to{color:var(--ink)}
+.parrow{color:var(--faint);text-align:center}
+.pst{font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.pst.failed{color:var(--hot);font-weight:600}
+.px{color:var(--faint);text-align:center;cursor:pointer;font-size:12px}
+.px:hover{color:var(--hot)}
+.pjson{font-family:var(--mono);font-size:10.5px;background:var(--ground);color:var(--muted);padding:8px 11px;margin:0;white-space:pre-wrap;word-break:break-word;border-top:1px solid var(--hair);max-height:160px;overflow:auto}
+.payload .pf{padding:8px 16px;border-top:1px solid var(--rule);font-family:var(--mono);font-size:10.5px;color:var(--faint);line-height:1.5}
+.toast{position:fixed;right:16px;bottom:16px;background:var(--ink);color:var(--ground);padding:10px 14px;font-size:13px;max-width:520px;z-index:20;border-radius:3px;box-shadow:0 4px 18px rgba(0,0,0,.25);white-space:pre-wrap}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <span class="brand">Desk <em>harness</em></span>
+    <div class="crumbs" id="crumbs"></div>
+    <div class="toolright">
+      <span class="stamp" id="stamp"></span>
+      <span id="pendwrap"></span>
+      <button class="tbtn" id="refresh" title="Rebuild the snapshot from Notion, or reload the fixture when offline">Refresh</button>
+    </div>
+  </div>
+  <div id="paywrap"></div>
+  <div class="cols" id="cols"></div>
+</div>
+<div class="toast hidden" id="toast"></div>
+<script>
+'use strict';
+const BOT = '<svg class="bot" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><rect x="2.5" y="5" width="11" height="8" rx="2"/><path d="M8 2.2v2.8M5.6 8.6h.01M10.4 8.6h.01"/></svg>';
+const PERSON = 'nathan';
+const AGENT = 'agent';
+
+let D = null;            // the desk, as served by /api/desk
+let PAY = null;          // the exact payload, as served by /api/payload
+const S = {room:null, task:null, sub:null, roomTab:'tasks', taskTab:'props', subTab:'props', agentTab:'feed', showPayload:false, nav:'rooms'};
+const U = {editing:false, editValue:null, responding:false};
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const attr = s => esc(s).replace(/"/g,'&quot;');
+const room = id => D.rooms[id];
+const task = id => D.tasks[id];
+const curRoom = () => room(S.room);
+const wiredRooms = () => Object.values(D.rooms).filter(r => r.wired && r.config);
+
+function toast(msg, ms){ const el=$('toast'); el.textContent=msg; el.classList.toggle('hidden', !msg); if(msg) setTimeout(()=>{ if(el.textContent===msg) el.classList.add('hidden'); }, ms||4500); }
+function fmtDate(d){ if(!d) return ''; const s = typeof d === 'string' ? d : d.start; if(!s) return ''; const m = s.slice(0,10).split('-'); if(m.length!==3) return s; const mon=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+m[1]-1]; return `${+m[2]} ${mon} ${m[0]}` + (s.length>10 ? ' ' + s.slice(11,16) : ''); }
+function isOverdue(t){ return t.due && t.due.start && ['todo','doing','blocked','review'].includes(t.state) && t.due.start.slice(0,10) < D.source.today; }
+function stateLabel(t){ return t.status_raw == null ? 'no status' : t.status_raw; }
+function pendingOf(id){ return (task(id) && task(id).pending) || []; }
+function proposalsOf(id){ return pendingOf(id).filter(c => c.state === 'proposed'); }
+function queuedOf(id){ return pendingOf(id).filter(c => c.state !== 'proposed'); }
+function showVal(v){ if(v == null || v === '') return '(empty)'; if(Array.isArray(v)) return v.length ? v.map(x => personName(x) || x).join(', ') : '(empty)'; if(typeof v === 'object') return (v.start||'') + (v.end ? ' → ' + v.end : ''); return String(v); }
+function personName(id){ const p = (D.people||[]).find(p => p.id.replace(/-/g,'') === String(id).replace(/-/g,'')); if(p) return p.name; if(/^[0-9a-f]{32}$/.test(String(id).replace(/-/g,''))) return 'unresolved user ' + String(id).replace(/-/g,'').slice(0,8); return null; }
+
+/* ---------- API ---------- */
+async function api(method, path, body){
+  const res = await fetch(path, {method, headers:{'Content-Type':'application/json'}, body: body ? JSON.stringify(body) : undefined, cache:'no-store'});
+  const data = await res.json().catch(()=>({}));
+  if(!res.ok) throw new Error(data.error || (method + ' ' + path + ' failed'));
+  return data;
+}
+function readHash(){
+  const h = new URLSearchParams(location.hash.replace(/^#/, ''));
+  if(!h.get('room') && !h.get('task')) return false;
+  if(h.get('task') && D.tasks[h.get('task')]){ const t = D.tasks[h.get('task')]; S.room = t.room_id; if(t.parent_id && D.tasks[t.parent_id]){ S.task = t.parent_id; S.sub = t.id; } else { S.task = t.id; S.sub = null; } }
+  else if(h.get('room') && D.rooms[h.get('room')]){ S.room = h.get('room'); S.task = firstTask(S.room); S.sub = null; }
+  else return false;
+  if(h.get('tab')) S.roomTab = h.get('tab');
+  if(h.get('ttab')) S.taskTab = h.get('ttab');
+  if(h.get('pay')) S.showPayload = true;
+  return true;
+}
+function writeHash(){ const parts = ['room='+S.room]; if(S.sub) parts.push('task='+S.sub); else if(S.task) parts.push('task='+S.task); if(S.showPayload) parts.push('pay=1'); history.replaceState(null, '', '#'+parts.join('&')); }
+async function load(keep){
+  D = await api('GET', '/api/desk');
+  if(!keep && readHash()){ /* deep link wins on first load */ }
+  else if(!keep || !S.room || !D.rooms[S.room]){ pickDefault(); }
+  if(S.showPayload) PAY = await api('GET', '/api/payload');
+  if(S.task && !D.tasks[S.task]) S.task = firstTask(S.room);
+  if(S.sub && !D.tasks[S.sub]) S.sub = null;
+  render();
+}
+function pickDefault(){
+  const order = D.areas.flatMap(a => a.room_ids).filter(id => D.rooms[id].wired && D.rooms[id].config);
+  const withOpen = order.find(id => D.rooms[id].counts.open > 0);
+  S.room = withOpen || order[0];
+  S.task = firstTask(S.room); S.sub = null;
+}
+function firstTask(rid){ const r = room(rid); if(!r || !r.top_task_ids) return null; const open = r.top_task_ids.find(id => ['todo','doing','blocked','review'].includes(task(id).state)); return open || r.top_task_ids[0] || null; }
+
+async function change(taskId, prop, to, by, note){
+  try{
+    await api('POST', '/api/changes', {task_id:taskId, property:prop, to, by: by||PERSON, note: note||''});
+    await load(true);
+    toast(by === AGENT ? 'Proposal queued at the gate' : `Queued: ${prop} → ${showVal(to)}`);
+  }catch(err){ toast(err.message); render(); }
+}
+
+/* ---------- render ---------- */
+function render(){
+  if(!D) return;
+  writeHash();
+  const r = curRoom(), t = task(S.task), s = S.sub ? task(S.sub) : null;
+  let c = r ? '<b>'+esc(r.area||'')+'</b><span class="sep">/</span><b>'+esc(r.name)+'</b>' : '';
+  if(t) c += '<span class="sep">/</span><b>'+esc(t.title||'(untitled row)')+'</b>';
+  if(s) c += '<span class="sep">/</span><b>'+esc(s.title||'(untitled row)')+'</b>';
+  $('crumbs').innerHTML = c;
+  $('stamp').innerHTML = '<b>'+esc(D.source.kind)+'</b> · read '+esc(String(D.source.captured_at||'').replace('T',' ').slice(0,16))+' · '+Object.keys(D.tasks).length+' rows in '+wiredRooms().length+' rooms';
+  $('pendwrap').innerHTML = pendingPill();
+  $('paywrap').innerHTML = payloadPanel();
+  $('cols').innerHTML = navCol() + (S.sub ? spineCol() : roomCol()) + (t ? detailCol(S.task, 'Task', 'taskTab') : '<section class="col detail"><div class="empty">Select a task.</div></section>') + (s ? detailCol(S.sub, 'Sub-item', 'subTab') : '') + agentCol();
+  wire();
+}
+
+function pendingPill(){
+  const q = D.queue.summary;
+  if(!q.pending) return '<span class="synced">nothing pending</span>';
+  return '<button class="pendbtn'+(S.showPayload?' on':'')+'" data-act="payload">'+q.pending+' pending '+(q.pending>1?'changes':'change')+
+    ' <span class="by">'+q.by_person+' you'+(q.by_agent?' · '+q.by_agent+' agent':'')+(q.proposed?' · '+q.proposed+' at the gate':'')+'</span></button>';
+}
+
+function payloadPanel(){
+  if(!S.showPayload) return '';
+  const changes = D.queue.changes;
+  const byTask = {};
+  changes.forEach(ch => { (byTask[ch.task_id] = byTask[ch.task_id] || []).push(ch); });
+  let h = '<div class="payload"><div class="ph"><span>Pending, one write path, both authors</span><span class="right">'+
+    '<button class="btn" data-act="copypay">Copy payload JSON</button>'+
+    '<button class="btn pri" data-act="send"'+(D.write_path.credential && D.queue.summary.queued ? '' : ' disabled')+'>Send to Notion</button>'+
+    '<button class="btn q" data-act="closepay">Close</button></span></div><div class="pb">';
+  if(!changes.length) h += '<div class="empty">Nothing pending.</div>';
+  Object.keys(byTask).forEach(tid => {
+    const list = byTask[tid];
+    const call = (PAY && PAY.calls || []).find(c => c.task_id === tid);
+    const rm = room(list[0].room_id);
+    h += '<div class="pcall"><div class="pfn">'+(call ? call.tool : 'notion-update-page')+'(<span class="pid">'+esc(list[0].title||tid)+'</span>)<span class="rm">'+esc(rm ? rm.name : '')+'</span></div>';
+    list.forEach(ch => {
+      h += '<div class="pline"><span class="pby '+ch.by+'">'+(ch.by===PERSON?'you':'agent')+'</span>'+
+        '<span class="pk">'+esc(ch.property)+'</span>'+
+        '<span class="pv from">'+esc(showVal(ch.from_value))+'</span><span class="parrow">&rarr;</span>'+
+        '<span class="pv to">'+esc(showVal(ch.to_value))+'</span>'+
+        '<span class="pst '+ch.state+'">'+ch.state+(ch.edited?' · edited':'')+'</span>'+
+        '<span class="px" data-discard="'+ch.id+'" title="Discard this change">×</span></div>';
+    });
+    if(call) h += '<pre class="pjson">'+esc(JSON.stringify(call.arguments, null, 1))+'</pre>';
+    h += '</div>';
+  });
+  h += '</div><div class="pf">'+esc(D.write_path.note)+' Proposals at the gate are not in the payload until accepted. Every sent write is read back before it counts.</div></div>';
+  return h;
+}
+
+function navCol(){
+  const props = D.queue.summary.proposed, cb = D.clipboard;
+  let h = '<nav class="col nav">';
+  h += '<button class="qbtn'+(props?'':' quiet')+(S.nav==='queue'?' sel':'')+'" data-nav="queue"><span class="r1"><span class="t">Waiting on you</span><span class="n">'+props+'</span></span>'+
+    '<span class="r2">'+(props ? props+' agent proposal'+(props>1?'s':'')+' at the gate' : 'no agent proposal at the gate')+' · Clipboard: '+cb.open+' open, '+cb.adjudicated+' adjudicated, none attached to a task</span></button>';
+  h += '<div class="navsec">Spaces</div><div class="colscroll">';
+  D.areas.forEach(area => {
+    h += '<div class="spacerow">'+esc(area.name)+'</div>';
+    area.room_ids.forEach(id => {
+      const r = room(id);
+      if(r.wired && r.config){
+        const n = r.counts.open, w = r.task_ids.reduce((acc, tid) => acc + proposalsOf(tid).length, 0);
+        h += '<button class="projrow'+(S.room===id?' sel':'')+'" data-room="'+id+'"><span>'+esc(r.name)+'</span>'+(w?'<span class="n wait">'+w+'</span>':n?'<span class="n">'+n+'</span>':'')+'</button>';
+      } else {
+        h += '<div class="projrow dim" title="'+attr(r.register_status||'')+' on the register; no Tasks source"><span>'+esc(r.name)+'</span><span class="tag">'+esc(r.register_status||'')+'</span></div>';
+      }
+    });
+  });
+  h += '</div><div class="navfoot">'+wiredRooms().length+' rooms with a task list · '+(D.areas.reduce((a,x)=>a+x.room_ids.length,0))+' on the register</div></nav>';
+  return h;
+}
+
+function spineCol(){ return '<button class="spine" data-up="1"><span class="ar">&lsaquo;</span><span class="lbl">'+esc(curRoom().name)+'</span></button>'; }
+
+function tabRow(level, tabs, sel){
+  return '<div class="tabs">'+tabs.map(t => '<button class="tab'+(sel===t.id?' sel':'')+(t.n===0?' empty':'')+'" data-tab="'+level+':'+t.id+'"><span>'+t.label+'</span>'+(t.dot?'<span class="dot"></span>':'')+(t.n?'<span class="ct">'+t.n+'</span>':'')+'</button>').join('')+'</div>';
+}
+
+function roomCol(){
+  const r = curRoom(); if(!r) return '<section class="col container"><div class="empty">No room.</div></section>';
+  const cfg = r.config, cnt = r.counts;
+  let h = '<section class="col container">';
+  h += '<div class="chead"><div class="ckick">Room &nbsp;·&nbsp; '+esc(r.area||'')+'</div><div class="ctitle">'+esc(r.name)+'</div><div class="cmeta">'+
+    '<span class="pill'+(r.register_status==='Live'?' done':'')+'">register: '+esc(r.register_status||'')+'</span>'+
+    '<span class="pill">'+cnt.rows+' rows</span>'+(cnt.open?'<span class="pill run">'+cnt.open+' open</span>':'<span class="pill">none open</span>')+
+    (cnt.unset?'<span class="pill wait">'+cnt.unset+' no status</span>':'')+
+    (r.tasks_url?'<span class="pill"><a href="'+attr(r.tasks_url)+'" target="_blank" rel="noopener">open in Notion ↗</a></span>':'')+
+    '</div></div>';
+  h += '<div class="brief"><div class="brieflbl"><span>Register notes</span><span class="hint">'+esc(r.database_title||'')+'</span></div><p>'+esc(r.notes||'No notes on the register.')+'</p></div>';
+  const dirt = r.findings.filter(f => f.level !== 'config');
+  h += tabRow('room', [
+    {id:'tasks', label:'Tasks', n:r.top_task_ids.length, dot: r.task_ids.some(id => proposalsOf(id).length)},
+    {id:'schema', label:'Schema', n:Object.keys(r.schema).length},
+    {id:'dirt', label:'Dirt', n:dirt.length}
+  ], S.roomTab);
+  h += '<div class="colscroll">';
+  if(S.roomTab==='tasks'){
+    h += '<div class="note">Grouped by <b>'+esc(cfg.grouping_field||'nothing')+'</b> · owner: <b>'+esc(cfg.owner_field||'no owner field')+'</b> · config from the '+esc(cfg.source)+'</div>';
+    r.groups.forEach(g => {
+      h += '<div class="grp"><span>'+esc(g.label)+'</span><span class="n">'+g.task_ids.length+'</span></div>';
+      h += g.task_ids.map(id => taskRow(id, S.task===id)).join('');
+    });
+    h += '<button class="newrow" data-act="newtask">+ New task in '+esc(r.name)+'</button>';
+  } else if(S.roomTab==='schema'){
+    h += '<div class="note'+(cfg.source==='register'?'':' gap')+'">'+(cfg.source==='register' ? 'Configuration read from the Room Register.' : 'Configuration partly derived from the schema. The Room Register should carry it.')+
+      (cfg.warnings.length ? '<br>'+cfg.warnings.map(esc).join('<br>') : '')+'</div>';
+    h += '<div class="list">';
+    h += '<div class="li"><span class="k">register says</span><span class="v">grouping <b>'+esc(r.register_config.grouping_field||'—')+'</b> · owner <b>'+esc(r.register_config.owner_field||'—')+'</b><br>vocabulary <b>'+esc((r.register_config.status_vocabulary||[]).join(', ')||'—')+'</b></span></div>';
+    Object.keys(r.schema).forEach(name => {
+      const p = r.schema[name];
+      let v = '';
+      if(p.options) v = p.options.map(o => '<span class="chip">'+esc(o)+'</span>').join('');
+      else if(p.type==='person') v = '<span class="chip">workspace people</span>';
+      else if(p.type==='relation') v = '<span class="chip">relation → '+esc((p.target||'').slice(0,8))+(p.target===r.tasks_source?' (this database)':'')+'</span>';
+      else v = '<span class="chip">'+esc(p.type)+'</span>';
+      const role = name===cfg.grouping_field ? 'groups' : name===cfg.owner_field ? 'owner' : name===r.title_property ? 'title' : name===r.status_property ? 'status' : '';
+      h += '<div class="li"><span class="k">'+esc(name)+'</span><span class="v">'+v+'</span><span class="when">'+esc(p.type)+(role?' · '+role:'')+'</span></div>';
+    });
+    h += '</div>';
+  } else {
+    h += dirt.length ? dirt.map(findingHTML).join('') : '<div class="empty">Nothing surfaced in this room.</div>';
+    const cfgf = r.findings.filter(f => f.level === 'config');
+    if(cfgf.length) h += '<div class="note">Configuration notes<br>'+cfgf.map(f => esc(f.note)).join('<br>')+'</div>';
+  }
+  return h + '</div></section>';
+}
+
+function findingHTML(f){
+  return '<div class="find"><div class="fr"><span>'+esc(f.rule)+'</span><span class="lv">'+f.count+' · '+esc(f.level)+'</span></div><div class="fn">'+esc(f.note)+'</div>'+
+    (f.items.length ? '<ul>'+f.items.slice(0,40).map(i => '<li><b data-task="'+i.task_id+'">'+esc(i.title)+'</b>'+(i.detail?': '+esc(i.detail):'')+'</li>').join('')+(f.items.length>40?'<li>… and '+(f.items.length-40)+' more</li>':'')+'</ul>' : '')+'</div>';
+}
+
+function taskRow(id, sel){
+  const t = task(id), r = room(t.room_id);
+  const bits = [];
+  bits.push(t.owner_names.length ? t.owner_names.join(', ') : 'no owner');
+  if(t.priority) bits.push(t.priority);
+  if(t.child_ids.length) bits.push(t.child_ids.length + ' sub');
+  const q = queuedOf(id).length, p = proposalsOf(id).length;
+  const vocab = r.config.status_vocabulary;
+  return '<div class="row'+(sel?' sel':'')+(['done','cancelled'].includes(t.state)?' dim':'')+'" data-task="'+id+'">'+
+    '<div class="top"><span class="st '+t.state+'" title="'+attr(stateLabel(t))+'"></span>'+
+    '<span class="ttl">'+(t.title ? esc(t.title) : '<em style="color:var(--dead)">(untitled row)</em>')+'</span>'+
+    (t.due ? '<span class="tail'+(isOverdue(t)?' over':'')+'">'+esc(fmtDate(t.due))+'</span>' : '')+'</div>'+
+    '<div class="sub"><select class="quickstat" data-quick="'+id+'" title="Status, in this database\'s own vocabulary">'+
+      '<option value=""'+(t.status_raw==null?' selected':'')+'>(no status)</option>'+
+      vocab.map(o => '<option'+(o===t.status_raw?' selected':'')+' value="'+attr(o)+'">'+esc(o)+'</option>').join('')+
+    '</select>'+bits.map(b => '<span>'+esc(b)+'</span>').join('')+
+    (q?'<span class="pendmark">'+q+' pending</span>':'')+(p?'<span class="propmark">'+p+' at the gate</span>':'')+'</div></div>';
+}
+
+/* ---------- the property editor ---------- */
+function propsHTML(t){
+  const r = room(t.room_id), sc = r.schema;
+  const pend = pendingOf(t.id);
+  let h = '<div class="props">';
+  Object.keys(sc).forEach(name => {
+    if(name === r.title_property) return;
+    const p = sc[name], val = t.props[name];
+    const q = pend.find(c => c.property===name && c.state!=='proposed'), pr = pend.find(c => c.property===name && c.state==='proposed');
+    h += '<div class="prow'+(q?' dirty':pr?' proposed':'')+'"><label class="pl" for="p_'+attr(name)+'">'+esc(name)+'<small>'+esc(p.type)+(name===r.config.grouping_field?' · groups':name===r.config.owner_field?' · owner':'')+'</small></label>';
+    if(p.type==='select' || p.type==='status'){
+      h += '<select class="pi" id="p_'+attr(name)+'" data-prop="'+attr(name)+'" data-type="'+p.type+'"><option value=""'+(val==null?' selected':'')+'>(empty)</option>'+
+        (p.options||[]).map(o => '<option'+(o===val?' selected':'')+' value="'+attr(o)+'">'+esc(o)+'</option>').join('')+'</select>';
+    } else if(p.type==='multi_select'){
+      const cur = val || [];
+      h += '<div class="checks" data-prop="'+attr(name)+'" data-type="multi_select">'+(p.options||[]).map(o => '<label><input type="checkbox" value="'+attr(o)+'"'+(cur.includes(o)?' checked':'')+'>'+esc(o)+'</label>').join('')+'</div>';
+    } else if(p.type==='person'){
+      const cur = (val||[]).map(x => String(x).replace(/-/g,''));
+      const opts = D.people.map(pp => ({id: pp.id.replace(/-/g,''), name: pp.name}));
+      cur.forEach(id => { if(!opts.find(o => o.id===id)) opts.push({id, name: 'unresolved user '+id.slice(0,8)}); });
+      h += '<div class="checks" data-prop="'+attr(name)+'" data-type="person">'+opts.map(o => '<label><input type="checkbox" value="'+attr(o.id)+'"'+(cur.includes(o.id)?' checked':'')+'>'+esc(o.name)+'</label>').join('')+'</div>';
+    } else if(p.type==='date'){
+      h += '<input class="pi" id="p_'+attr(name)+'" data-prop="'+attr(name)+'" data-type="date" value="'+attr(val ? val.start : '')+'" placeholder="(empty) · YYYY-MM-DD"'+(val && val.end ? ' data-end="'+attr(val.end)+'" title="Range ends '+attr(val.end)+'; editing the start keeps the end"' : '')+(val && val.is_datetime ? ' data-dt="1"' : '')+'>';
+    } else if(p.type==='checkbox'){
+      h += '<div class="checks"><label><input type="checkbox" data-prop="'+attr(name)+'" data-type="checkbox"'+(val?' checked':'')+'>'+(val?'checked':'unchecked')+'</label></div>';
+    } else if(p.type==='relation'){
+      const ids = val || [];
+      h += '<span class="pi ro">'+(ids.length ? ids.map(id => { const tt = task(id); return tt ? esc(tt.title||'(untitled)') : esc(id.slice(0,8))+'…'; }).join(', ') : '(empty)')+' <small style="color:var(--dead)">· relation, read-only here</small></span>';
+    } else if(p.type==='number'){
+      h += '<input class="pi" type="number" id="p_'+attr(name)+'" data-prop="'+attr(name)+'" data-type="number" value="'+attr(val==null?'':val)+'" placeholder="(empty)">';
+    } else if(p.type==='text' || p.type==='rich_text'){
+      h += '<textarea class="pi ta" id="p_'+attr(name)+'" data-prop="'+attr(name)+'" data-type="text" placeholder="(empty)">'+esc(val||'')+'</textarea>';
+    } else {
+      h += '<input class="pi" id="p_'+attr(name)+'" data-prop="'+attr(name)+'" data-type="'+attr(p.type)+'" value="'+attr(val||'')+'" placeholder="(empty)">';
+    }
+    if(pr) h += '<span></span><span class="note gap" style="border:0;padding:4px 7px">agent proposes '+esc(showVal(pr.to_value))+(pr.note?' · '+esc(pr.note):'')+'</span>';
+    h += '</div>';
+  });
+  return h + '</div>';
+}
+
+function detailCol(id, kind, tabKey){
+  const t = task(id), r = room(t.room_id), tab = S[tabKey];
+  const q = queuedOf(id).length, p = proposalsOf(id).length;
+  let h = '<section class="col detail">';
+  h += '<div class="chead"><div class="ckick">'+kind+(t.parent_id && task(t.parent_id) ? ' &nbsp;·&nbsp; under '+esc(task(t.parent_id).title||'(untitled)') : '')+'</div>'+
+    '<input class="titleedit" data-prop="'+attr(r.title_property||'Task')+'" data-type="title" value="'+attr(t.title||'')+'" placeholder="Untitled">'+
+    '<div class="cmeta"><span class="pill'+(t.state==='done'?' done':t.state==='doing'?' run':t.state==='blocked'?' hot':'')+'">'+esc(stateLabel(t))+'</span>'+
+    (t.owner_names.length?'<span class="pill">'+esc(t.owner_names.join(', '))+'</span>':'')+
+    (t.due?'<span class="pill'+(isOverdue(t)?' hot':'')+'">due '+esc(fmtDate(t.due))+'</span>':'')+
+    (q?'<span class="pill wait">'+q+' pending</span>':'')+(p?'<span class="pill new">'+p+' at the gate</span>':'')+
+    (t.url && !t.url.startsWith('local://') ? '<span class="pill"><a href="'+attr(t.url)+'" target="_blank" rel="noopener">open in Notion ↗</a></span>' : '')+
+    '</div></div>';
+  h += tabRow(kind==='Task'?'task':'sub', [
+    {id:'props', label:'Properties', n:Object.keys(r.schema).length-1},
+    {id:'children', label:r.children_property || 'Sub-items', n:t.child_ids.length},
+    {id:'body', label:'Body', n:0},
+    {id:'outcomes', label:'Outcomes', n:0}
+  ], tab);
+  h += '<div class="colscroll">';
+  if(tab==='props'){ h += propsHTML(t); }
+  else if(tab==='children'){
+    h += t.child_ids.length ? t.child_ids.map(c => task(c) ? taskRow(c, S.sub===c) : '').join('')
+      : '<div class="empty">'+(r.parent_property ? 'No sub-items. '+esc(r.parent_property)+' and '+esc(r.children_property)+' exist in this database.' : 'This database has no parent and sub-item relation.')+'</div>';
+  }
+  else if(tab==='body'){ h += '<div class="note gap">Page bodies are not read yet. The task page opens in Notion from the pill above.</div>'; }
+  else { h += '<div class="note gap">Outcomes is a new database per room, with a Level property. It does not exist yet, so nothing can be recorded here.</div>'; }
+  return h + '</div></section>';
+}
+
+/* ---------- agent ---------- */
+function agentCol(){
+  const id = S.sub || S.task, t = id ? task(id) : null;
+  const props = t ? proposalsOf(id) : [];
+  let h = '<aside class="col agent">';
+  h += '<div class="ahead">'+BOT+'<span class="nm">Desk agent</span><span class="pill'+(props.length?' wait':'')+'">'+(props.length ? 'awaitingInput' : 'no session')+'</span></div>';
+  if(props.length) h += gateHTML(t, props[0], props.length);
+  else h += '<div class="idle">No proposal on this row. When the agent proposes a change it lands in the same pending list your own edits do, gated instead of applied. Proposals arrive through the API or <code class="m">python3 -m desk propose</code>.</div>';
+  const feed = t ? feedOf(id) : [];
+  h += tabRow('agent', [{id:'feed', label:'Feed', n:feed.length}, {id:'chat', label:'Chat', n:0}], S.agentTab);
+  h += '<div class="astream">';
+  if(S.agentTab==='feed'){
+    if(t) h += proposeForm(t);
+    h += feed.length ? feed.map(feedLine).join('') : '<div class="empty">No changes on this row yet.</div>';
+  } else {
+    h += '<div class="note gap">Conversation is a new store, keyed to the task. It does not exist yet, so nothing said here is kept.</div>';
+  }
+  h += '</div><div class="prompt"><input id="interject" placeholder="'+(S.agentTab==='feed'?'No agent session is attached to this desk yet':'No conversation store exists yet')+'" disabled><button class="pill" disabled>send</button></div>';
+  return h + '</aside>';
+}
+
+function feedOf(id){
+  const all = [].concat(D.queue.changes, D.queue.history).filter(c => c.task_id === id);
+  return all.sort((a,b) => (a.created_at||'').localeCompare(b.created_at||''));
+}
+function feedLine(c){
+  const who = c.by===PERSON ? 'you' : 'agent';
+  const verb = c.by===PERSON ? 'set' : (c.state==='proposed' ? 'proposes' : 'proposed');
+  let extra = '';
+  if(c.state==='returned' && c.response) extra = ' · returned: “'+esc(c.response)+'”';
+  if(c.state==='rejected' && c.response) extra = ' · rejected: “'+esc(c.response)+'”';
+  if(c.result && c.result.error) extra = ' · '+esc(c.result.error);
+  return '<div class="ai"><span class="k '+who+'">'+who+'</span><span class="v">'+verb+' <code>'+esc(c.property)+'</code> '+esc(showVal(c.from_value))+' &rarr; <b>'+esc(showVal(c.to_value))+'</b>'+(c.note?' · '+esc(c.note):'')+extra+'<span class="st">'+esc(c.state)+(c.edited?' · edited':'')+'</span></span></div>';
+}
+
+function proposeForm(t){
+  const r = room(t.room_id), sc = r.schema;
+  const names = Object.keys(sc).filter(n => !['relation','title','person'].includes(sc[n].type));
+  return '<div class="propose"><span class="l">Test the gate: propose as the agent</span><div class="f">'+
+    '<select id="pp_prop">'+names.map(n => '<option value="'+attr(n)+'">'+esc(n)+'</option>').join('')+'</select>'+
+    '<input id="pp_val" placeholder="value, in that database\'s own words">'+
+    '<input id="pp_note" placeholder="why (shown at the gate)" style="grid-column:1/3">'+
+    '</div><div class="verbs"><button class="btn" data-act="propose">Propose</button></div></div>';
+}
+
+function gateHTML(t, c, n){
+  const r = room(t.room_id), p = r.schema[c.property] || {type:'text'};
+  const val = U.editing && U.editValue !== null ? U.editValue : c.to_value;
+  let h = '<div class="gate"><div class="gh"><span class="l">Decision</span>'+(n>1?'<span class="pill new">'+n+' waiting on this row</span>':'')+'<span class="e">no expiry field exists</span></div><div class="gb">';
+  h += '<div class="q">The agent proposes <code class="m">'+esc(c.property)+'</code> &rarr; '+esc(showVal(c.to_value))+(c.note?'<small>'+esc(c.note)+'</small>':'')+'</div>';
+  h += '<div class="call"><div class="ch"><span class="l">Accept would queue</span><span class="fn">notion-update-page()</span></div><div class="cb">';
+  h += '<div class="arg"><span class="k">task</span><span class="v">'+esc(t.title||'(untitled)')+'</span></div>';
+  h += '<div class="arg"><span class="k">property</span><span class="v">'+esc(c.property)+'</span></div>';
+  h += '<div class="arg"><span class="k">from</span><span class="v from">'+esc(showVal(c.from_value))+'</span></div>';
+  if(U.editing){
+    if(p.options) h += '<div class="arg"><label class="k" for="gedit">to</label><select class="v" id="gedit"><option value="">(empty)</option>'+p.options.map(o => '<option'+(o===val?' selected':'')+' value="'+attr(o)+'">'+esc(o)+'</option>').join('')+'</select></div>';
+    else h += '<div class="arg"><label class="k" for="gedit">to</label><input class="v" id="gedit" value="'+attr(typeof val==='object'&&val?JSON.stringify(val):val==null?'':val)+'"></div>';
+  } else {
+    h += '<div class="arg"><span class="k">to</span><span class="v">'+esc(showVal(c.to_value))+'</span></div>';
+  }
+  h += '</div></div>';
+  h += '<div class="respond'+(U.responding?' open':'')+'"><textarea id="rtext" placeholder="Tell the agent what to do instead. This goes back with the proposal."></textarea>'+
+    '<div class="verbs"><button class="btn pri" data-gate="respond" data-id="'+c.id+'">Send back</button><button class="btn q" data-act="cancelrespond">Cancel</button></div></div>';
+  h += '<div class="verbs"><button class="btn pri" data-gate="accept" data-id="'+c.id+'">'+(U.editing?'Accept with edits':'Accept')+'</button>'+
+    '<button class="btn'+(U.editing?' on':'')+'" data-act="edit">'+(U.editing?'Editing':'Edit')+'</button>'+
+    '<button class="btn" data-act="respond">Respond</button>'+
+    '<button class="btn q" data-gate="ignore" data-id="'+c.id+'">Ignore</button></div>';
+  return h + '</div></div>';
+}
+
+/* ---------- wiring ---------- */
+function resetGate(){ U.editing=false; U.editValue=null; U.responding=false; }
+function wire(){
+  document.querySelectorAll('[data-room]').forEach(b => b.onclick = () => { S.room=b.dataset.room; S.roomTab='tasks'; S.task=firstTask(S.room); S.sub=null; S.taskTab='props'; resetGate(); render(); });
+  document.querySelectorAll('[data-nav]').forEach(b => b.onclick = () => {
+    const pending = D.queue.changes.find(c => c.state==='proposed');
+    if(pending){ const t = task(pending.task_id); if(t){ S.room=t.room_id; if(t.parent_id && task(t.parent_id)){ S.task=t.parent_id; S.sub=t.id; } else { S.task=t.id; S.sub=null; } resetGate(); render(); return; } }
+    S.showPayload = !S.showPayload; if(S.showPayload) api('GET','/api/payload').then(p => { PAY=p; render(); }); else render();
+  });
+  document.querySelectorAll('.row[data-task], .find b[data-task]').forEach(el => el.onclick = e => {
+    if(e.target.closest('select')) return;
+    const id = el.dataset.task, t = task(id); if(!t) return;
+    if(t.parent_id && task(t.parent_id) && t.room_id===S.room){ S.task = t.parent_id; S.sub = id; S.subTab='props'; }
+    else { S.room = t.room_id; S.task = id; S.sub = null; S.taskTab='props'; }
+    if(el.tagName==='B') S.roomTab='tasks';
+    resetGate(); render();
+  });
+  document.querySelectorAll('[data-quick]').forEach(s => s.onchange = e => change(e.target.dataset.quick, room(task(e.target.dataset.quick).room_id).status_property, e.target.value || null));
+  document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { const [l,id]=b.dataset.tab.split(':'); if(l==='room') S.roomTab=id; else if(l==='task') S.taskTab=id; else if(l==='agent') S.agentTab=id; else S.subTab=id; render(); });
+  document.querySelectorAll('[data-up]').forEach(b => b.onclick = () => { S.sub=null; resetGate(); render(); });
+  document.querySelectorAll('[data-discard]').forEach(el => el.onclick = async () => { try{ await api('POST', '/api/changes/'+el.dataset.discard+'/discard', {}); await load(true); toast('Discarded'); }catch(err){ toast(err.message); } });
+  document.querySelectorAll('[data-act]').forEach(b => b.onclick = () => act(b.dataset.act));
+  document.querySelectorAll('[data-gate]').forEach(b => b.onclick = () => gate(b.dataset.gate, b.dataset.id));
+  $('refresh').onclick = async () => { $('refresh').disabled = true; toast('Refreshing…'); try{ const r = await api('POST','/api/refresh',{}); await load(true); toast('Read '+r.tasks+' rows from '+r.kind+' ('+r.rooms+' rooms)'); }catch(err){ toast(err.message); } finally { $('refresh').disabled=false; } };
+
+  // property editors: the current detail column (sub-item when open) owns the edits
+  const cur = S.sub || S.task;
+  document.querySelectorAll('.col.detail').forEach((col, i, cols) => {
+    if(col !== cols[cols.length-1]) return;
+    col.querySelectorAll('.pi[data-prop], .titleedit[data-prop]').forEach(f => {
+      const commit = e => {
+        const type = f.dataset.type; let v = e.target.value;
+        if(type==='date'){ v = v.trim() || null; if(v && f.dataset.end) v = {start:v, end:f.dataset.end, is_datetime: !!f.dataset.dt}; }
+        else if(type==='number'){ v = v === '' ? null : Number(v); }
+        else { v = v === '' ? null : v; }
+        const before = task(cur).props[f.dataset.prop], beforeStr = showVal(before);
+        if(showVal(v) === beforeStr) return;
+        change(cur, f.dataset.prop, v);
+      };
+      if(f.tagName==='SELECT') f.onchange = commit; else f.onblur = commit;
+    });
+    col.querySelectorAll('.checks[data-prop]').forEach(box => box.querySelectorAll('input').forEach(inp => inp.onchange = () => {
+      const vals = Array.from(box.querySelectorAll('input:checked')).map(i => i.value);
+      change(cur, box.dataset.prop, vals);
+    }));
+    col.querySelectorAll('input[data-type="checkbox"][data-prop]').forEach(inp => inp.onchange = () => change(cur, inp.dataset.prop, inp.checked));
+  });
+  const ge = $('gedit'); if(ge) ge.oninput = e => { U.editValue = e.target.value === '' ? null : e.target.value; };
+}
+
+async function act(a){
+  if(a==='payload' || a==='closepay'){ S.showPayload = a==='payload' ? !S.showPayload : false; if(S.showPayload){ try{ PAY = await api('GET','/api/payload'); }catch(e){} } render(); return; }
+  if(a==='copypay'){ try{ const p = PAY || await api('GET','/api/payload'); await navigator.clipboard.writeText(JSON.stringify(p.calls, null, 1)); toast('Payload copied: '+p.calls.length+' call'+(p.calls.length===1?'':'s')); }catch(err){ toast('Copy failed: '+err.message); } return; }
+  if(a==='send'){
+    try{ const r = await api('POST','/api/send',{}); await load(true);
+      if(!r.sent) toast('Not sent: '+r.reason);
+      else toast(r.results.map(x => (x.state==='verified'?'✓ ':'✗ ')+(x.title||x.task_id)+' · '+x.state+(x.error?' · '+x.error:'')).join('\n'), 8000);
+    }catch(err){ toast(err.message); }
+    return;
+  }
+  if(a==='newtask'){
+    const title = prompt('Title of the new task in '+curRoom().name+':'); if(!title) return;
+    try{ const r = await api('POST','/api/tasks',{room_id:S.room, title, by:PERSON}); await load(true); S.task = r.change.task_id; S.sub=null; render(); toast('Queued a new row'); }catch(err){ toast(err.message); }
+    return;
+  }
+  if(a==='propose'){
+    const id = S.sub || S.task, prop = $('pp_prop').value, raw = $('pp_val').value.trim(), note = $('pp_note').value.trim();
+    const p = room(task(id).room_id).schema[prop] || {};
+    let v = raw === '' ? null : raw;
+    if(p.type==='multi_select') v = raw ? raw.split(',').map(s=>s.trim()).filter(Boolean) : [];
+    if(p.type==='checkbox') v = /^(yes|true|1|checked)$/i.test(raw);
+    if(p.type==='number') v = raw === '' ? null : Number(raw);
+    await change(id, prop, v, AGENT, note);
+    return;
+  }
+  if(a==='edit'){ U.editing=!U.editing; U.editValue=null; U.responding=false; render(); return; }
+  if(a==='respond'){ U.responding=true; U.editing=false; render(); const el=$('rtext'); if(el) el.focus(); return; }
+  if(a==='cancelrespond'){ U.responding=false; render(); return; }
+}
+
+async function gate(verb, id){
+  try{
+    if(verb==='accept'){
+      const body = {};
+      if(U.editing && U.editValue !== null){ let v = U.editValue; try{ if(/^[\[{]/.test(v)) v = JSON.parse(v); }catch(e){} body.to = v; }
+      await api('POST','/api/changes/'+id+'/accept', body); toast('Accepted; queued through the same write path');
+    } else if(verb==='respond'){
+      const text = ($('rtext') && $('rtext').value.trim()) || ''; if(!text){ toast('Say what to do instead.'); return; }
+      await api('POST','/api/changes/'+id+'/respond', {text}); toast('Returned to the agent with your note');
+    } else if(verb==='ignore'){
+      await api('POST','/api/changes/'+id+'/ignore', {}); toast('Ignored. Nothing written; the proposal stays on the record.');
+    }
+    resetGate(); await load(true);
+  }catch(err){ toast(err.message); }
+}
+
+window.addEventListener('keydown', e => { if(e.key==='Escape' && S.sub){ S.sub=null; resetGate(); render(); } });
+load().catch(err => toast('Could not load the desk: '+err.message));
+</script>
+</body>
+</html>

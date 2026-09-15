@@ -1,0 +1,24 @@
+{
+  "data_source_id": "e2b34801-94e2-4184-8b3e-07e4228b25b2",
+  "title": "Flux Films Tasks",
+  "schema": {
+    "Task": {"type": "title"},
+    "Status": {"type": "status", "options": ["Not started", "In progress", "Done"], "groups": {"to_do": ["Not started"], "in_progress": ["In progress"], "complete": ["Done"]}},
+    "Project": {"type": "relation", "target": "6f4faa05-3bbf-4103-8092-5e83715179b7"},
+    "Owner": {"type": "person"},
+    "Priority": {"type": "select", "options": ["High", "Medium", "Low"]},
+    "Due Date": {"type": "date"},
+    "Completed At": {"type": "date"},
+    "Source": {"type": "url"},
+    "Context / Completion Test": {"type": "text"},
+    "Parent Task": {"type": "relation", "target": "e2b34801-94e2-4184-8b3e-07e4228b25b2"},
+    "Subtasks": {"type": "relation", "target": "e2b34801-94e2-4184-8b3e-07e4228b25b2"}
+  },
+  "rows": [
+    {"url": "https://app.notion.com/3cab26df5467810084ebe87c82ad7442", "createdTime": "2026-08-28 19:08:42Z", "Source": "https://app.notion.com/p/3c8b26df54678173bc03caf735ef0f27", "Priority": "High", "Parent Task": null, "date:Completed At:start": null, "date:Completed At:end": null, "date:Completed At:is_datetime": null, "date:Due Date:start": null, "date:Due Date:end": null, "date:Due Date:is_datetime": null, "Status": "Not started", "Owner": "[\"user://db244d9b-5d0e-4da3-8449-367242b98f17\"]", "Project": "[\"https://app.notion.com/3cab26df5467816086bfe78cdd3c58b3\"]", "Subtasks": null, "Context / Completion Test": "Continue writing dialogue and scene progression, assigning lines to the photos to be included.", "Task": "Write dialogue and scene progression for selected photos"},
+    {"url": "https://app.notion.com/3cab26df54678145b4bcc189c167a757", "createdTime": "2026-08-28 19:08:42Z", "Source": "https://app.notion.com/p/3c8b26df54678173bc03caf735ef0f27", "Priority": "High", "Parent Task": null, "date:Completed At:start": null, "date:Completed At:end": null, "date:Completed At:is_datetime": null, "date:Due Date:start": null, "date:Due Date:end": null, "date:Due Date:is_datetime": null, "Status": "Not started", "Owner": "[\"user://1cb13004-8266-40b6-92da-63771be9b248\"]", "Project": "[\"https://app.notion.com/3cab26df5467816086bfe78cdd3c58b3\"]", "Subtasks": null, "Context / Completion Test": "Post the existing quick test clips in a location Ray can view.", "Task": "Post quick test clips for Ray to view"},
+    {"url": "https://app.notion.com/3cab26df5467814d8e31df653c432ad8", "createdTime": "2026-08-28 19:08:42Z", "Source": "https://app.notion.com/p/3c8b26df54678173bc03caf735ef0f27", "Priority": "Medium", "Parent Task": null, "date:Completed At:start": null, "date:Completed At:end": null, "date:Completed At:is_datetime": null, "date:Due Date:start": null, "date:Due Date:end": null, "date:Due Date:is_datetime": null, "Status": "Not started", "Owner": null, "Project": "[\"https://app.notion.com/3cab26df5467816086bfe78cdd3c58b3\"]", "Subtasks": null, "Context / Completion Test": "Design the shareable Flux-branded presentation: player, play interaction, then the story through clips and stills.", "Task": "Design shareable Flux-branded teaser presentation"},
+    {"url": "https://app.notion.com/3cab26df546781c3ad68dd3629058d4a", "createdTime": "2026-08-28 19:08:42Z", "Source": "https://app.notion.com/p/3c8b26df54678173bc03caf735ef0f27", "Priority": "High", "Parent Task": null, "date:Completed At:start": null, "date:Completed At:end": null, "date:Completed At:is_datetime": null, "date:Due Date:start": null, "date:Due Date:end": null, "date:Due Date:is_datetime": null, "Status": "Not started", "Owner": null, "Project": "[\"https://app.notion.com/3cab26df5467816086bfe78cdd3c58b3\"]", "Subtasks": null, "Context / Completion Test": "Build a roughly 30-second teaser plus storyboard, using 10–20 second clips, stills, and scene descriptors for the gaps.", "Task": "Build 30-second teaser and storyboard"},
+    {"url": "https://app.notion.com/3cab26df546781f99fd6d544ae8e2bd4", "createdTime": "2026-08-28 19:08:42Z", "Source": "https://app.notion.com/p/3c8b26df54678173bc03caf735ef0f27", "Priority": "High", "Parent Task": null, "date:Completed At:start": null, "date:Completed At:end": null, "date:Completed At:is_datetime": null, "date:Due Date:start": null, "date:Due Date:end": null, "date:Due Date:is_datetime": null, "Status": "Not started", "Owner": "[\"user://1cb13004-8266-40b6-92da-63771be9b248\"]", "Project": "[\"https://app.notion.com/3cab26df5467816086bfe78cdd3c58b3\"]", "Subtasks": null, "Context / Completion Test": "Send Ray one existing wide-shot clip for the teaser deck.", "Task": "Send Ray an existing wide-shot clip for the teaser deck"}
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "people": [
+    {"id": "380d872b-594c-818e-9b01-000283f4f77b", "name": "Brian Grady", "email": "brian@sightbox.me"},
+    {"id": "db244d9b-5d0e-4da3-8449-367242b98f17", "name": "Charlie Hinojosa", "email": "charlie@sightbox.me"},
+    {"id": "1c2d872b-594c-8166-b4de-0002d30dcfad", "name": "charlie@sightbox.co", "email": "charlie@sightbox.co"},
+    {"id": "1cb13004-8266-40b6-92da-63771be9b248", "name": "Nathan Thompson", "email": "nathan@sightbox.me"}
+  ],
+  "bots_omitted": 24,
+  "note": "Four people and twenty-four bots were returned by notion-get-users on 14 Sep 2026. Bots never appear in person properties and were left out."
+}

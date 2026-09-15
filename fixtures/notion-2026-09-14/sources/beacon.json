@@ -1,0 +1,33 @@
+{
+  "data_source_id": "50fbec91-407b-4bf6-a9bb-83ec6f0b40ea",
+  "title": "Beacon Tasks",
+  "schema": {
+    "Task": {"type": "title"},
+    "Status": {"type": "status", "options": ["Not started", "Up next", "In progress", "Blocked", "Done"], "groups": {"to_do": ["Not started", "Up next"], "in_progress": ["In progress", "Blocked"], "complete": ["Done"]}},
+    "Phase": {"type": "select", "options": ["Phase 1", "Phase 2", "Phase 3", "Backlog"]},
+    "Priority": {"type": "select", "options": ["High", "Medium", "Low"]}
+  },
+  "rows": [
+    {"url": "https://app.notion.com/078b121b64d64b93819d3de9e0779539", "createdTime": "2026-05-13 20:16:00Z", "Priority": "High", "Status": "Done", "Phase": "Phase 1", "Task": "Working session with Charlie on placement and division of labor"},
+    {"url": "https://app.notion.com/27d5562966684c3c9738530fb9f835f3", "createdTime": "2026-05-13 20:16:00Z", "Priority": "High", "Status": "Done", "Phase": "Phase 1", "Task": "Lock the name (Beacon vs Prism / Manifest / Atlas)"},
+    {"url": "https://app.notion.com/13200cbadab243929046b5a522166343", "createdTime": "2026-05-13 20:16:01Z", "Priority": "High", "Status": "In progress", "Phase": "Phase 1", "Task": "Draft the graph schema in detail (entity types, property bags, relations)"},
+    {"url": "https://app.notion.com/4d8d2edbc803452fbe00195c349120d8", "createdTime": "2026-05-13 20:16:01Z", "Priority": "High", "Status": "In progress", "Phase": "Phase 1", "Task": "Sketch v0 build shape (Notion as graph + thin emitter layer) and pick target stack"},
+    {"url": "https://app.notion.com/67b7caac4e4c48bf8e16ca6a232c93cd", "createdTime": "2026-05-13 20:16:02Z", "Priority": "Medium", "Status": "Not started", "Phase": "Phase 1", "Task": "Pilot on sightbox.co — establish baseline orank score and target lift"},
+    {"url": "https://app.notion.com/71429477071544fd91dcf6efdb9b7e78", "createdTime": "2026-05-13 20:16:03Z", "Priority": "Medium", "Status": "Not started", "Phase": "Phase 1", "Task": "Sketch design.md v0.1 including nested / collapsible layout patterns for Beams"},
+    {"url": "https://app.notion.com/8a1c46a830b3429680c2e2728d2186d9", "createdTime": "2026-05-13 20:16:03Z", "Priority": "Medium", "Status": "Not started", "Phase": "Phase 2", "Task": "Sketch V2 instrumentation pipeline and suggestion-engine design"},
+    {"url": "https://app.notion.com/e7a0a0f9cf474e429c59ddcfd58698e4", "createdTime": "2026-05-13 20:16:03Z", "Priority": "Low", "Status": "Not started", "Phase": "Phase 1", "Task": "Decide whether Phase 1 ships a static Beams view per persona"},
+    {"url": "https://app.notion.com/f42fc0fcd30b4d748ff671729cdf8cdb", "createdTime": "2026-05-13 20:16:06Z", "Priority": "Medium", "Status": "Not started", "Phase": "Phase 2", "Task": "Define the fitness function spec (objectives, hard constraints, tradeoff preferences)"},
+    {"url": "https://app.notion.com/1bf1ae9a205f4a1680267a709b6d3c18", "createdTime": "2026-05-13 20:16:07Z", "Priority": "Medium", "Status": "Not started", "Phase": "Phase 2", "Task": "Sketch cold-start strategy (synthetic agent panels, reference benchmarks, authored priors)"},
+    {"url": "https://app.notion.com/8d7dc359417d4972a2aa77fc264e5e63", "createdTime": "2026-05-13 20:16:08Z", "Priority": "Medium", "Status": "Not started", "Phase": "Phase 3", "Task": "Pair-session with Charlie on Standing Counsel pairing motion"},
+    {"url": "https://app.notion.com/ab2d56112f0a475ebda55fd56236926a", "createdTime": "2026-05-13 20:16:08Z", "Priority": "Low", "Status": "Not started", "Phase": "Phase 2", "Task": "Instrument branch-expansion behavior on Beams as V2 signal"},
+    {"url": "https://app.notion.com/74720ebbb5e4457588d7c0a2c2d5b243", "createdTime": "2026-05-13 20:16:09Z", "Priority": "Medium", "Status": "Not started", "Phase": "Phase 3", "Task": "Write the cross-tenant data contract (aggregation rules, privacy guarantees)"},
+    {"url": "https://app.notion.com/4dfd0c56056e45c982bd990d676a374d", "createdTime": "2026-05-13 20:16:13Z", "Priority": "Low", "Status": "Not started", "Phase": "Backlog", "Task": "Decide outbound loop timing: V2.5 or V3"},
+    {"url": "https://app.notion.com/557a4fbca71644b0824f7de4d2a4deb0", "createdTime": "2026-05-13 20:16:13Z", "Priority": "Medium", "Status": "Not started", "Phase": "Phase 3", "Task": "Decide first external customer (portfolio company, friendly client, or fund-level pilot)"},
+    {"url": "https://app.notion.com/0a82c94dc38b4a9b9c06a996d1ee5a5e", "createdTime": "2026-05-13 20:16:14Z", "Priority": "Low", "Status": "Not started", "Phase": "Backlog", "Task": "Design multi-author governance (branching, review, role-based permissions)"},
+    {"url": "https://app.notion.com/58065c01b3c74e12aad865e26553dbbf", "createdTime": "2026-05-13 20:16:15Z", "Priority": "Low", "Status": "Not started", "Phase": "Backlog", "Task": "Spec native Beacon platform tooling (graph editor, staging UI, publish flow, rollback)"},
+    {"url": "https://app.notion.com/b44a5ff53a1a452099f9a442f5b63956", "createdTime": "2026-05-13 20:16:15Z", "Priority": "Low", "Status": "Not started", "Phase": "Backlog", "Task": "Design runtime composition engine (the CMS-replacement North Star)"},
+    {"url": "https://app.notion.com/79eefc5d7f454f4fb7a712f35bc24da3", "createdTime": "2026-05-13 20:16:18Z", "Priority": "Low", "Status": "Not started", "Phase": "Backlog", "Task": "Spec Beams runtime version (per-reader pre-expansion based on referrer and evidence)"},
+    {"url": "https://app.notion.com/b26e799b92ec4d69884f5006e52ae0a8", "createdTime": "2026-05-13 20:16:18Z", "Priority": "Low", "Status": "Not started", "Phase": "Backlog", "Task": "Cross-tenant learning and category benchmarks (post first paying customer)"},
+    {"url": "https://app.notion.com/3ca9010c74eb48fb92e02d97d80bd2b8", "createdTime": "2026-05-13 20:16:19Z", "Priority": "Low", "Status": "Not started", "Phase": "Backlog", "Task": "Evaluate Beacon as a standalone offering for VC funds (portfolio-wide deployment)"}
+  ]
+}
